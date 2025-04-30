@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:myapp/animation.dart';
+import 'package:myapp/signup.dart';
 import 'dart:math';
 import 'login.dart';
 
@@ -17,7 +19,9 @@ class SportApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.pink),
       initialRoute: '/',
       routes: {
-        '/': (context) => const Login(),
+        '/': (context) => const AnimationPage(),
+        '/login': (context) => const Login(),
+        '/signup': (context) => const Signup(),
         '/calculator': (context) => const CalculatorPage(),
       },
       // home: const CalculatorPage(),
