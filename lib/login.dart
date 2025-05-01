@@ -50,7 +50,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     if (_emailController.text == 'bryan' &&
         _passwordController.text == '123456') {
       // 登入成功，導向計算機頁面
-      Navigator.pushReplacementNamed(context, '/calculator');
+      Navigator.pushReplacementNamed(context, '/homer');
     } else {
       // 登入失敗
       showDialog(
