@@ -20,9 +20,7 @@ class HomePage extends StatelessWidget {
                   Row(
                     children: [
                       const CircleAvatar(
-                        // backgroundImage: AssetImage(
-                        //   'assets/images/profile.png',
-                        // ),
+                        backgroundImage: AssetImage('assets/images/profile.png'),
                         radius: 24,
                       ),
                       const SizedBox(width: 12),
@@ -58,7 +56,7 @@ class HomePage extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      '1 883 Kcal',
+                      '1 883 Kcal',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -79,50 +77,136 @@ class HomePage extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: const [
-                  _StatItem(label: 'Distance', value: '7580 m'),
-                  _StatItem(label: 'Steps', value: '9832'),
-                  _StatItem(label: 'Points', value: '1248'),
+                  _StatItem(label: 'Distance', value: '7 580 m'),
+                  _StatItem(label: 'Steps', value: '9 832'),
+                  _StatItem(label: 'Points', value: '1 248'),
                 ],
               ),
 
               const SizedBox(height: 24),
 
-              // Activity Bars (Mocked)
+              // Current Points & Rank Card
               Container(
-                height: 160,
+                width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.pink.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
                 padding: const EdgeInsets.all(16),
-                child: const Center(child: Text('Activity Chart Placeholder')),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Left: Current Points
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Current Points',
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: const [
+                            Icon(Icons.star, color: Colors.amber, size: 28),
+                            SizedBox(width: 4),
+                            Text(
+                              '1 234',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Text('pts', style: TextStyle(fontSize: 16)),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    // Right: Rank
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'Rank',
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: const [
+                            Icon(Icons.emoji_events, color: Colors.orange, size: 28),
+                            SizedBox(width: 4),
+                            Text(
+                              '#5',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 24),
 
-              // Exercise Cards
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  _ExerciseCard(
-                    title: 'Dumbbell',
-                    kcal: 628,
-                    icon: Icons.fitness_center,
-                    color: Color(0xFFFF6B6B),
-                  ),
-                  _ExerciseCard(
-                    title: 'Treadmill',
-                    kcal: 235,
-                    icon: Icons.directions_run,
-                    color: Colors.deepPurpleAccent,
-                  ),
-                  _ExerciseCard(
-                    title: 'Rope',
-                    kcal: 432,
-                    icon: Icons.sports,
-                    color: Colors.orange,
-                  ),
-                ],
+              // Recent Runs Section
+              const Text(
+                'Recent Runs',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const spacing = 8.0 * 2;
+                  final cardWidth = (constraints.maxWidth - spacing) / 3;
+                  return Row(
+                    children: [
+                      SizedBox(
+                        width: cardWidth,
+                        child: const _RunCard(
+                          date: 'Jul 7',
+                          distanceKm: 5.0,
+                          duration: '30 min',
+                          difficulty: 'Easy',
+                          kcal: 300,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: cardWidth,
+                        child: const _RunCard(
+                          date: 'Jul 6',
+                          distanceKm: 6.2,
+                          duration: '35 min',
+                          difficulty: 'Medium',
+                          kcal: 380,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: cardWidth,
+                        child: const _RunCard(
+                          date: 'Jul 5',
+                          distanceKm: 4.5,
+                          duration: '25 min',
+                          difficulty: 'Easy',
+                          kcal: 260,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 24),
@@ -157,7 +241,7 @@ class HomePage extends StatelessWidget {
         unselectedFontSize: 12,
         selectedIconTheme: const IconThemeData(size: 36),
         unselectedIconTheme: const IconThemeData(size: 28),
-        selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         onTap: (index) {
           switch (index) {
             case 0:
@@ -167,7 +251,6 @@ class HomePage extends StatelessWidget {
               Navigator.pushNamed(context, '/start');
               break;
             case 2:
-              // Already on Home
               break;
             case 3:
               Navigator.pushNamed(context, '/health');
@@ -179,16 +262,10 @@ class HomePage extends StatelessWidget {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.groups), label: 'Team'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.play_circle),
-            label: 'Start',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.play_circle), label: 'Start'),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Health'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
       ),
     );
@@ -199,7 +276,7 @@ class _StatItem extends StatelessWidget {
   final String label;
   final String value;
 
-  const _StatItem({required this.label, required this.value});
+  const _StatItem({required this.label, required this.value, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -216,41 +293,79 @@ class _StatItem extends StatelessWidget {
   }
 }
 
-class _ExerciseCard extends StatelessWidget {
-  final String title;
+class _RunCard extends StatelessWidget {
+  final String date;
+  final double distanceKm;
+  final String duration;
+  final String difficulty;
   final int kcal;
-  final IconData icon;
-  final Color color;
 
-  const _ExerciseCard({
-    required this.title,
+  const _RunCard({
+    required this.date,
+    required this.distanceKm,
+    required this.duration,
+    required this.difficulty,
     required this.kcal,
-    required this.icon,
-    required this.color,
+    super.key,
   });
+
+  Color get _bgColor {
+    switch (difficulty.toLowerCase()) {
+      case 'easy':
+        return Colors.green.withOpacity(0.1);
+      case 'medium':
+        return Colors.orange.withOpacity(0.1);
+      case 'hard':
+        return Colors.red.withOpacity(0.1);
+      default:
+        return Colors.grey.withOpacity(0.1);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 30, color: color),
-            const SizedBox(height: 8),
-            Text(
-              '$kcal Kcal',
-              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+    final iconColor = difficulty.toLowerCase() == 'easy'
+        ? Colors.green
+        : difficulty.toLowerCase() == 'medium'
+        ? Colors.orange
+        : Colors.red;
+    return Container(
+      decoration: BoxDecoration(
+        color: _bgColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.directions_run, size: 30, color: iconColor),
+          const SizedBox(height: 8),
+          Text(date, style: const TextStyle(fontSize:20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text('${distanceKm.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 18)),
+          const SizedBox(height: 4),
+          Text(duration, style: const TextStyle(fontSize:16, color: Colors.grey)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.local_fire_department, size: 20, color: Colors.redAccent),
+              const SizedBox(width: 4),
+              Text('$kcal kcal', style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 4),
-            Text(title, style: const TextStyle(color: Colors.black)),
-          ],
-        ),
+            child: Text(
+              difficulty,
+              style: TextStyle(fontSize: 16, color: iconColor),
+            ),
+          ),
+        ],
       ),
     );
   }
