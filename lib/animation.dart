@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AnimationPage extends StatefulWidget {
-  const AnimationPage({Key? key}) : super(key: key);
+  const AnimationPage({super.key});
 
   @override
   _AnimationPageState createState() => _AnimationPageState();

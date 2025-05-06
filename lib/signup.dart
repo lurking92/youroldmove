@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -29,17 +31,14 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
-
-    _animationController.forward(); // 動畫開始
+    _animationController.forward();
   }
 
   @override
@@ -74,9 +73,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
               ),
               TextButton(
                 onPressed: () {
-                  setState(() {
-                    _birthDate = tempPickedDate;
-                  });
+                  setState(() => _birthDate = tempPickedDate);
                   Navigator.pop(context);
                 },
                 child: const Text('Confirm', style: TextStyle(fontSize: 18)),
@@ -88,73 +85,73 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
     );
   }
 
-  void _signup() {
+  void _signup() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _birthDate == null) {
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Missing Information'),
-              content: Text('Please fill in all the required fields.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Confirm'),
-                ),
-              ],
-            ),
+      _showMessage(
+        'Missing Information',
+        'Please fill in all the required fields.',
       );
       return;
     }
 
     if (!_isValidEmail(_emailController.text)) {
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Invalid Email'),
-              content: Text('Please enter a valid email address.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Confirm'),
-                ),
-              ],
-            ),
-      );
+      _showMessage('Invalid Email', 'Please enter a valid email address.');
       return;
     }
 
     if (!_isValidPassword(_passwordController.text)) {
-      showDialog(
-        context: context,
-        builder:
-            (context) => AlertDialog(
-              title: Text('Weak Password'),
-              content: Text('Password must be at least 8 characters long.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Confirm'),
-                ),
-              ],
-            ),
+      _showMessage(
+        'Weak Password',
+        'Password must be at least 8 characters long.',
       );
       return;
     }
 
+    try {
+      final userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+
+      final uid = userCredential.user?.uid;
+
+      if (uid != null) {
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'birthDate': _birthDate!.toIso8601String(),
+        });
+
+        _showMessage(
+          'Sign Up Success',
+          'You have successfully registered.',
+          onConfirm: () {
+            Navigator.pop(context);
+          },
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      _showMessage('Sign Up Failed', e.message ?? 'Unknown error occurred');
+    }
+  }
+
+  void _showMessage(String title, String message, {VoidCallback? onConfirm}) {
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            title: Text('Sign Up Success'),
-            content: Text('You have successfully registered.'),
+          (_) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                  if (onConfirm != null) onConfirm();
+                },
                 child: const Text('Confirm'),
               ),
             ],
@@ -235,6 +232,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                     ),
                     const SizedBox(height: 30),
                     ElevatedButton(
+                      onPressed: _signup,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.pink,
                         foregroundColor: Colors.white,
@@ -244,8 +242,21 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                         ),
                         textStyle: const TextStyle(fontSize: 18),
                       ),
-                      onPressed: _signup,
                       child: const Text('Sign Up'),
+                    ),
+                    const SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/login');
+                      },
+                      child: const Text(
+                        'Already have account？ Sign in here',
+                        style: TextStyle(
+                          color: Colors.blueAccent,
+                          fontSize: 14,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
                     ),
                   ],
                 ),

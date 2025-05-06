@@ -20,7 +20,9 @@ class HomePage extends StatelessWidget {
                   Row(
                     children: [
                       const CircleAvatar(
-                        backgroundImage: AssetImage('assets/images/profile.png'),
+                        backgroundImage: AssetImage(
+                          'assets/images/profile.png',
+                        ),
                         radius: 24,
                       ),
                       const SizedBox(width: 12),
@@ -141,7 +143,11 @@ class HomePage extends StatelessWidget {
                         const SizedBox(height: 8),
                         Row(
                           children: const [
-                            Icon(Icons.emoji_events, color: Colors.orange, size: 28),
+                            Icon(
+                              Icons.emoji_events,
+                              color: Colors.orange,
+                              size: 28,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               '#5',
@@ -262,10 +268,16 @@ class HomePage extends StatelessWidget {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.groups), label: 'Team'),
-          BottomNavigationBarItem(icon: Icon(Icons.play_circle), label: 'Start'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.play_circle),
+            label: 'Start',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Health'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
     );
@@ -324,11 +336,12 @@ class _RunCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = difficulty.toLowerCase() == 'easy'
-        ? Colors.green
-        : difficulty.toLowerCase() == 'medium'
-        ? Colors.orange
-        : Colors.red;
+    final iconColor =
+        difficulty.toLowerCase() == 'easy'
+            ? Colors.green
+            : difficulty.toLowerCase() == 'medium'
+            ? Colors.orange
+            : Colors.red;
     return Container(
       decoration: BoxDecoration(
         color: _bgColor,
@@ -340,17 +353,33 @@ class _RunCard extends StatelessWidget {
         children: [
           Icon(Icons.directions_run, size: 30, color: iconColor),
           const SizedBox(height: 8),
-          Text(date, style: const TextStyle(fontSize:20, fontWeight: FontWeight.bold)),
+          Text(
+            date,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 4),
-          Text('${distanceKm.toStringAsFixed(1)} km', style: const TextStyle(fontSize: 18)),
+          Text(
+            '${distanceKm.toStringAsFixed(1)} km',
+            style: const TextStyle(fontSize: 18),
+          ),
           const SizedBox(height: 4),
-          Text(duration, style: const TextStyle(fontSize:16, color: Colors.grey)),
+          Text(
+            duration,
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
+          ),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.local_fire_department, size: 20, color: Colors.redAccent),
+              const Icon(
+                Icons.local_fire_department,
+                size: 20,
+                color: Colors.redAccent,
+              ),
               const SizedBox(width: 4),
-              Text('$kcal kcal', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                '$kcal kcal',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           const SizedBox(height: 8),

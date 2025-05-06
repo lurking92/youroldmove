@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -18,17 +19,14 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-
     _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
     );
-
-    _animationController.forward(); // 動畫開始
+    _animationController.forward();
   }
 
   @override
@@ -40,38 +38,31 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
   }
 
   void _login() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    // 模擬登入延遲
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (_emailController.text == 'bryan' &&
-        _passwordController.text == '123456') {
-      // 登入成功，導向計算機頁面
+    setState(() => _isLoading = true);
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
       Navigator.pushReplacementNamed(context, '/home');
-    } else {
-      // 登入失敗
+    } on FirebaseAuthException catch (e) {
       showDialog(
         context: context,
         builder:
-            (context) => AlertDialog(
-              title: const Text('Login Unsuccessful'),
-              content: const Text('Email or Password Incorrect.'),
+            (_) => AlertDialog(
+              title: const Text('Login Failed'),
+              content: Text(e.message ?? 'Unknown error occurred'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Confirm'),
+                  child: const Text('OK'),
                 ),
               ],
             ),
       );
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
@@ -118,6 +109,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                   _isLoading
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
+                        onPressed: _login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.pink,
                           foregroundColor: Colors.white,
@@ -126,7 +118,6 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                             vertical: 18,
                           ),
                         ),
-                        onPressed: _login,
                         child: const Text('Login'),
                       ),
                   const SizedBox(height: 20),

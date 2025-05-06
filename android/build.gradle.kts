@@ -1,3 +1,18 @@
+buildscript {
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    // ...
+    dependencies {
+        // 使用新版 Google Services Plugin
+        classpath("com.android.tools.build:gradle:8.3.0") // 根據你的 AGP 版本
+        classpath("com.google.gms:google-services:4.4.1") // ✅ Firebase Plugin (最新版)
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -19,3 +34,4 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
