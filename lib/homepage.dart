@@ -262,7 +262,7 @@ class HomePage extends StatelessWidget {
               Navigator.pushNamed(context, '/health');
               break;
             case 4:
-              Navigator.pushNamed(context, '/settings');
+              Navigator.pushNamed(context, '/setting');
               break;
           }
         },
