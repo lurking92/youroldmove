@@ -290,7 +290,7 @@ class _StatItem extends StatelessWidget {
   final String label;
   final String value;
 
-  const _StatItem({required this.label, required this.value, super.key});
+  const _StatItem({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +320,6 @@ class _RunCard extends StatelessWidget {
     required this.duration,
     required this.difficulty,
     required this.kcal,
-    super.key,
   });
 
   Color get _bgColor {

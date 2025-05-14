@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class RecordPage extends StatefulWidget {
+  const RecordPage({super.key});
+
   @override
   _RecordPageState createState() => _RecordPageState();
 }

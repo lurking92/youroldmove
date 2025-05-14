@@ -11,6 +11,8 @@ enum PredefinedTarget { slowWalk30, slowRun15 }
 enum NextTargetType { predefined, custom }
 
 class StartPage extends StatefulWidget {
+  const StartPage({super.key});
+
   @override
   _StartPageState createState() => _StartPageState();
 }
@@ -165,7 +167,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext builder) {
-        return Container(
+        return SizedBox(
           height: MediaQuery.of(builder).size.height / 3,
           child: CupertinoTimerPicker(
             mode: CupertinoTimerPickerMode.hms,
@@ -338,7 +340,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "${twoDigits(duration.inHours)}:${twoDigitMinutes}:${twoDigitSeconds}";
+    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
   }
 
   @override
@@ -397,7 +399,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                     // 延遲 2 秒後儲存
                     if (_tempWeight != null && _tempWeight != _weightKg) {
                       setState(() => _weightKg = _tempWeight!);
-                      _saveWeightToFirestore(_weightKg!);
+                      _saveWeightToFirestore(_weightKg);
                     }
                   });
                 }
