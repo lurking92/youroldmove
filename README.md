@@ -14,3 +14,20 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+# 關於share_plus問題
+請把\Users\使用者名稱\AppData\Local\Pub\Cache\hosted\pub.dev\share_plus-4.5.3\android\src\main\AndroidManifest.xml中的部分改掉
+移除package="dev.fluttercommunity.plus.share"
+
+# bulid.gradle問題
+請在C:\Users\使用者名稱\AppData\Local\Pub\Cache\hosted\pub.dev\share_plus-4.5.3\android\build.gradle
+的android中新增
+namespace 'com.example.myapp'
+
+kotlinOptions {
+jvmTarget = '1.8' // 明確指定 JVM 目標版本為 1.8 (較為通用)
+}
+//以下不知是否需要
+在C:\Users\使用者名稱\AppData\Local\Pub\Cache\hosted\pub.dev\share_plus-6.3.4\android\build.gradle
+的android中新增
+namespace 'dev.fluttercommunity.plus.share' // 在這裡添加 namespace

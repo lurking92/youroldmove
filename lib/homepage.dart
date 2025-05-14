@@ -46,7 +46,9 @@ class HomePage extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.calendar_today_outlined),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/record');
+                    },
                   ),
                 ],
               ),
