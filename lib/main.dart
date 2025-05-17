@@ -10,6 +10,7 @@ import 'package:myapp/setting.dart';
 import 'package:myapp/signup.dart';
 // 新增 import
 import 'package:myapp/start.dart';
+import 'package:myapp/team.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,7 @@ class SportApp extends StatelessWidget {
         // 新增路由
         '/start': (context) => StartPage(),
         '/record': (context) => RecordPage(),
+        '/team': (context) => const TeamPage(),
       },
     );
   }
