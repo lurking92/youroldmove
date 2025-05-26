@@ -124,6 +124,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
           'birthDate': _birthDate!.toIso8601String(),
+          'joinedTeamIds': [],
         });
 
         _showMessage(

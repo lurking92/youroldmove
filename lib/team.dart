@@ -139,7 +139,7 @@ class _TeamPageState extends State<TeamPage> {
           title: const Text('Join Team'),
           content: TextField(
             autofocus: true,
-            decoration: const InputDecoration(hintText: 'Enter team code or name'),
+            decoration: const InputDecoration(hintText: 'Enter team code'),
             onChanged: (value) {
               teamCode = value.trim();
             },
