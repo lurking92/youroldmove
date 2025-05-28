@@ -65,71 +65,71 @@ class _HomePageState extends State<HomePage> {
         .snapshots()
         .listen(
           (snapshot) {
-            double totalCaloriesToday = 0;
-            for (var doc in snapshot.docs) {
-              final data = doc.data();
-              final caloriesData = data['calories'];
-              if (caloriesData is String) {
-                totalCaloriesToday +=
-                    double.tryParse(caloriesData.replaceAll(' ', '')) ?? 0.0;
-              } else if (caloriesData is num) {
-                totalCaloriesToday += caloriesData.toDouble();
-              }
-            }
-            print('Updated total kcal: $totalCaloriesToday');
-            setState(() {
-              _totalKcal = totalCaloriesToday;
-              kcalLoaded = true;
-              if (recentRunsLoaded) _isLoading = false;
-            });
-          },
-          onError: (error) {
-            print('Error listening to kcal changes: $error');
-            kcalLoaded = true;
-            if (recentRunsLoaded) {
-              setState(() => _isLoading = false);
-            }
-          },
-        );
+        double totalCaloriesToday = 0;
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          final caloriesData = data['calories'];
+          if (caloriesData is String) {
+            totalCaloriesToday +=
+                double.tryParse(caloriesData.replaceAll(' ', '')) ?? 0.0;
+          } else if (caloriesData is num) {
+            totalCaloriesToday += caloriesData.toDouble();
+          }
+        }
+        print('Updated total kcal: $totalCaloriesToday');
+        setState(() {
+          _totalKcal = totalCaloriesToday;
+          kcalLoaded = true;
+          if (recentRunsLoaded) _isLoading = false;
+        });
+      },
+      onError: (error) {
+        print('Error listening to kcal changes: $error');
+        kcalLoaded = true;
+        if (recentRunsLoaded) {
+          setState(() => _isLoading = false);
+        }
+      },
+    );
 
     // Step 2: recent 3 runs listener
     final runsStream =
-        FirebaseFirestore.instance
-            .collection('users')
-            .doc(_userId)
-            .collection('records')
-            .orderBy('timestamp', descending: true)
-            .limit(3)
-            .snapshots();
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(_userId)
+        .collection('records')
+        .orderBy('timestamp', descending: true)
+        .limit(3)
+        .snapshots();
 
     _runsSubscription = runsStream.listen(
-      (snapshot) {
+          (snapshot) {
         final allRuns =
-            snapshot.docs.map((doc) {
-              final data = doc.data();
-              final timestamp = data['timestamp'];
-              final date =
-                  timestamp is int
-                      ? DateTime.fromMillisecondsSinceEpoch(timestamp)
-                      : DateTime.now();
-              final formattedDate = DateFormat('MMM d').format(date);
-              final caloriesData = data['calories'];
-              double calories = 0.0;
-              if (caloriesData is String) {
-                calories =
-                    double.tryParse(caloriesData.replaceAll(' ', '')) ?? 0.0;
-              } else if (caloriesData is num) {
-                calories = caloriesData.toDouble();
-              }
-              final durationStr = data['duration']?.toString() ?? '00:00:00';
-              return {
-                'date': formattedDate,
-                'duration': durationStr,
-                'difficulty': _getDifficultyFromDuration(durationStr),
-                'kcal': calories,
-                'timestamp': timestamp,
-              };
-            }).toList();
+        snapshot.docs.map((doc) {
+          final data = doc.data();
+          final timestamp = data['timestamp'];
+          final date =
+          timestamp is int
+              ? DateTime.fromMillisecondsSinceEpoch(timestamp)
+              : DateTime.now();
+          final formattedDate = DateFormat('MMM d').format(date);
+          final caloriesData = data['calories'];
+          double calories = 0.0;
+          if (caloriesData is String) {
+            calories =
+                double.tryParse(caloriesData.replaceAll(' ', '')) ?? 0.0;
+          } else if (caloriesData is num) {
+            calories = caloriesData.toDouble();
+          }
+          final durationStr = data['duration']?.toString() ?? '00:00:00';
+          return {
+            'date': formattedDate,
+            'duration': durationStr,
+            'difficulty': _getDifficultyFromDuration(durationStr),
+            'kcal': calories,
+            'timestamp': timestamp,
+          };
+        }).toList();
 
         print('Loaded ${allRuns.length} recent records');
         setState(() {
@@ -172,335 +172,335 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child:
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
                     children: [
-                      // Header
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      const CircleAvatar(
+                        backgroundImage: AssetImage(
+                          'assets/images/profile.png',
+                        ),
+                        radius: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              const CircleAvatar(
-                                backgroundImage: AssetImage(
-                                  'assets/images/profile.png',
-                                ),
-                                radius: 24,
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Hello Linh!',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    _currentDate,
-                                    style: TextStyle(color: Colors.grey[600]),
-                                  ),
-                                ],
-                              ),
-                            ],
+                          const Text(
+                            'Hello Linh!',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.calendar_today_outlined),
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/record');
-                            },
+                          Text(
+                            _currentDate,
+                            style: TextStyle(color: Colors.grey[600]),
                           ),
                         ],
-                      ),
-
-                      const SizedBox(height: 24),
-                      // Calories - Using calculated total calories
-                      Center(
-                        child: Column(
-                          children: [
-                            Text(
-                              '${_totalKcal.toStringAsFixed(1)} Kcal',
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            const Text(
-                              'Total Kilocalories Today',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-                      // Stats section
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: const [
-                          _StatItem(label: 'Distance', value: '7 580 m'),
-                          _StatItem(label: 'Steps', value: '9 832'),
-                          _StatItem(label: 'Points', value: '1 248'),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-                      // Current Points & Rank Card
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.pink.shade50,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Left: Current Points
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Current Points',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: const [
-                                    Icon(
-                                      Icons.star,
-                                      color: Colors.amber,
-                                      size: 28,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      '1 234',
-                                      style: TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text('pts', style: TextStyle(fontSize: 16)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            // Right: Rank
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                const Text(
-                                  'Rank',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: const [
-                                    Icon(
-                                      Icons.emoji_events,
-
-                                      color: Colors.orange,
-
-                                      size: 28,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      '#5',
-                                      style: TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Recent Runs Section - Using data loaded from Firebase
-                      const Text(
-                        'Recent Runs',
-
-                        style: TextStyle(
-                          fontSize: 20,
-
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Fix for line 513 in the LayoutBuilder
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final double spacing =
-                              8.0 * 2; // Ensure this is explicitly a double
-                          final double cardWidth =
-                              (constraints.maxWidth - spacing) / 3;
-
-                          // If no data or user not logged in, display static data
-                          if (_recentRuns.isEmpty) {
-                            return Row(
-                              children: [
-                                SizedBox(
-                                  width: cardWidth,
-                                  child: const _RunCard(
-                                    date: 'Jul 7',
-                                    duration: '00:30:00',
-                                    difficulty: 'Easy',
-                                    kcal: 300.0, // Make sure this is a double
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                SizedBox(
-                                  width: cardWidth,
-                                  child: const _RunCard(
-                                    date: 'Jul 6',
-                                    duration: '00:35:00',
-                                    difficulty: 'Medium',
-                                    kcal: 380.0, // Make sure this is a double
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                SizedBox(
-                                  width: cardWidth,
-                                  child: const _RunCard(
-                                    date: 'Jul 5',
-                                    duration: '00:25:00',
-                                    difficulty: 'Easy',
-                                    kcal: 260.0, // Make sure this is a double
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-
-                          // Use Firebase loaded data - only take the first 3 runs
-                          final displayRuns = _recentRuns.take(3).toList();
-                          final List<Widget> runCards = [];
-
-                          // Add dynamic data cards
-                          for (int i = 0; i < displayRuns.length; i++) {
-                            final run = displayRuns[i];
-                            if (i > 0) {
-                              runCards.add(const SizedBox(width: 8));
-                            }
-                            runCards.add(
-                              SizedBox(
-                                width: cardWidth,
-                                child: _RunCard(
-                                  date: run['date'],
-                                  duration: run['duration'],
-                                  difficulty: run['difficulty'],
-                                  kcal:
-                                      run['kcal']
-                                          .toDouble(), // Ensure this is converted to double
-                                ),
-                              ),
-                            );
-                          }
-
-                          // If fewer than 3 records, fill with static data
-                          if (displayRuns.length == 1) {
-                            runCards.add(const SizedBox(width: 8));
-                            runCards.add(
-                              SizedBox(
-                                width: cardWidth,
-                                child: const _RunCard(
-                                  date: 'Jul 6',
-                                  duration: '00:35:00',
-                                  difficulty: 'Medium',
-                                  kcal: 380.0,
-                                ),
-                              ),
-                            );
-                            runCards.add(const SizedBox(width: 8));
-                            runCards.add(
-                              SizedBox(
-                                width: cardWidth,
-                                child: const _RunCard(
-                                  date: 'Jul 5',
-                                  duration: '00:25:00',
-                                  difficulty: 'Easy',
-                                  kcal: 260.0,
-                                ),
-                              ),
-                            );
-                          } else if (displayRuns.length == 2) {
-                            runCards.add(const SizedBox(width: 8));
-                            runCards.add(
-                              SizedBox(
-                                width: cardWidth,
-                                child: const _RunCard(
-                                  date: 'Jul 5',
-                                  duration: '00:25:00',
-                                  difficulty: 'Easy',
-                                  kcal: 260.0,
-                                ),
-                              ),
-                            );
-                          }
-                          return Row(children: runCards);
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      // Plan Section
-                      const Text(
-                        'My Plan',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Text(
-                        'July, 2021',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Center(
-                          child: Text('Training Plan Placeholder'),
-                        ),
                       ),
                     ],
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.calendar_today_outlined),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/record');
+                    },
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+              // Calories - Using calculated total calories
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      '${_totalKcal.toStringAsFixed(1)} Kcal',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Total Kilocalories Today',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
                 ),
+              ),
+
+              const SizedBox(height: 24),
+              // Stats section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: const [
+                  _StatItem(label: 'Distance', value: '7 580 m'),
+                  _StatItem(label: 'Steps', value: '9 832'),
+                  _StatItem(label: 'Points', value: '1 248'),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+              // Current Points & Rank Card
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.pink.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Left: Current Points
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Current Points',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+                        Row(
+                          children: const [
+                            Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 28,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              '1 234',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Text('pts', style: TextStyle(fontSize: 16)),
+                          ],
+                        ),
+                      ],
+                    ),
+                    // Right: Rank
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'Rank',
+                          style: TextStyle(
+                            color: Colors.grey,
+
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: const [
+                            Icon(
+                              Icons.emoji_events,
+
+                              color: Colors.orange,
+
+                              size: 28,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              '#5',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Recent Runs Section - Using data loaded from Firebase
+              const Text(
+                'Recent Runs',
+
+                style: TextStyle(
+                  fontSize: 20,
+
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Fix for line 513 in the LayoutBuilder
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final double spacing =
+                      8.0 * 2; // Ensure this is explicitly a double
+                  final double cardWidth =
+                      (constraints.maxWidth - spacing) / 3;
+
+                  // If no data or user not logged in, display static data
+                  if (_recentRuns.isEmpty) {
+                    return Row(
+                      children: [
+                        SizedBox(
+                          width: cardWidth,
+                          child: const _RunCard(
+                            date: 'Jul 7',
+                            duration: '00:30:00',
+                            difficulty: 'Easy',
+                            kcal: 300.0, // Make sure this is a double
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: cardWidth,
+                          child: const _RunCard(
+                            date: 'Jul 6',
+                            duration: '00:35:00',
+                            difficulty: 'Medium',
+                            kcal: 380.0, // Make sure this is a double
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: cardWidth,
+                          child: const _RunCard(
+                            date: 'Jul 5',
+                            duration: '00:25:00',
+                            difficulty: 'Easy',
+                            kcal: 260.0, // Make sure this is a double
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+
+                  // Use Firebase loaded data - only take the first 3 runs
+                  final displayRuns = _recentRuns.take(3).toList();
+                  final List<Widget> runCards = [];
+
+                  // Add dynamic data cards
+                  for (int i = 0; i < displayRuns.length; i++) {
+                    final run = displayRuns[i];
+                    if (i > 0) {
+                      runCards.add(const SizedBox(width: 8));
+                    }
+                    runCards.add(
+                      SizedBox(
+                        width: cardWidth,
+                        child: _RunCard(
+                          date: run['date'],
+                          duration: run['duration'],
+                          difficulty: run['difficulty'],
+                          kcal:
+                          run['kcal']
+                              .toDouble(), // Ensure this is converted to double
+                        ),
+                      ),
+                    );
+                  }
+
+                  // If fewer than 3 records, fill with static data
+                  if (displayRuns.length == 1) {
+                    runCards.add(const SizedBox(width: 8));
+                    runCards.add(
+                      SizedBox(
+                        width: cardWidth,
+                        child: const _RunCard(
+                          date: 'Jul 6',
+                          duration: '00:35:00',
+                          difficulty: 'Medium',
+                          kcal: 380.0,
+                        ),
+                      ),
+                    );
+                    runCards.add(const SizedBox(width: 8));
+                    runCards.add(
+                      SizedBox(
+                        width: cardWidth,
+                        child: const _RunCard(
+                          date: 'Jul 5',
+                          duration: '00:25:00',
+                          difficulty: 'Easy',
+                          kcal: 260.0,
+                        ),
+                      ),
+                    );
+                  } else if (displayRuns.length == 2) {
+                    runCards.add(const SizedBox(width: 8));
+                    runCards.add(
+                      SizedBox(
+                        width: cardWidth,
+                        child: const _RunCard(
+                          date: 'Jul 5',
+                          duration: '00:25:00',
+                          difficulty: 'Easy',
+                          kcal: 260.0,
+                        ),
+                      ),
+                    );
+                  }
+                  return Row(children: runCards);
+                },
+              ),
+              const SizedBox(height: 24),
+              // Plan Section
+              const Text(
+                'My Plan',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Text(
+                'July, 2021',
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: Text('Training Plan Placeholder'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
 
       bottomNavigationBar: BottomNavigationBar(
@@ -602,11 +602,11 @@ class _RunCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor =
-        difficulty.toLowerCase() == 'easy'
-            ? Colors.green
-            : difficulty.toLowerCase() == 'medium'
-            ? Colors.orange
-            : Colors.red;
+    difficulty.toLowerCase() == 'easy'
+        ? Colors.green
+        : difficulty.toLowerCase() == 'medium'
+        ? Colors.orange
+        : Colors.red;
 
     // 處理不同型別的 kcal 值
     String kcalText;
