@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,13 +12,14 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   StreamSubscription<QuerySnapshot>? _todayKcalSubscription;
+  StreamSubscription<QuerySnapshot>? _runsSubscription;
   final List<Map<String, dynamic>> _recentRuns = [];
   double _totalKcal = 0;
   bool _isLoading = true;
   String _currentDate = '';
   String? _userId;
   // Add a stream subscription to update in real-time
-  StreamSubscription<QuerySnapshot>? _runsSubscription;
+
 
   @override
   void initState() {
@@ -35,9 +35,6 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
     _todayKcalSubscription?.cancel();
   }
-
-  // Use a stream listener instead of a one-time load
-
   void _setupRecentRunsListener() {
     if (_userId == null) {
       setState(() {
@@ -178,50 +175,61 @@ class _HomePageState extends State<HomePage> {
         _isLoading
             ? const Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(26),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser?.uid)
+                    .snapshots(),
+                builder: (context, snapshot){
+                  final data = snapshot.data?.data() as Map<String, dynamic>? ?? {};
+                  final name = data['name'] ?? 'User' ;
+                  final photoUrl = data['photoUrl'] ?? '';
+
               // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const CircleAvatar(
-                        backgroundImage: AssetImage(
-                          'assets/images/profile.png',
-                        ),
-                        radius: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
                         children: [
-                          const Text(
-                            'Hello Linh!',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          CircleAvatar(
+                            backgroundImage: photoUrl.isNotEmpty
+                                ? NetworkImage(photoUrl)
+                                : const AssetImage('assets/images/profile.png') as ImageProvider,
+                            radius: 24,
                           ),
-                          Text(
-                            _currentDate,
-                            style: TextStyle(color: Colors.grey[600]),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Hello $name !',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                _currentDate,
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                            ],
                           ),
                         ],
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.calendar_today_outlined),
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/record');
+                        },
+                      ),
                     ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.calendar_today_outlined),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/record');
-                    },
-                  ),
-                ],
+                  );
+                },
               ),
-
               const SizedBox(height: 24),
               // Calories - Using calculated total calories
               Center(
