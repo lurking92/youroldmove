@@ -482,30 +482,6 @@ class _HomePageState extends State<HomePage> {
                   return Row(children: runCards);
                 },
               ),
-              const SizedBox(height: 24),
-              // Plan Section
-              const Text(
-                'My Plan',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Text(
-                'July, 2021',
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Center(
-                  child: Text('Training Plan Placeholder'),
-                ),
-              ),
             ],
           ),
         ),
