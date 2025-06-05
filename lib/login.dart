@@ -13,6 +13,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _obscurePassword = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -48,17 +49,16 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     } on FirebaseAuthException catch (e) {
       showDialog(
         context: context,
-        builder:
-            (_) => AlertDialog(
-              title: const Text('Login Failed'),
-              content: Text(e.message ?? 'Unknown error occurred'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('OK'),
-                ),
-              ],
+        builder: (_) => AlertDialog(
+          title: const Text('Login Failed'),
+          content: Text('Email or password incorrect'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
             ),
+          ],
+        ),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -79,57 +79,104 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Welcome to YourOldMove',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    'Welcome Back 👋',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Log in to continue using YourOldMove',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 40),
                   TextField(
                     controller: _emailController,
-                    decoration: const InputDecoration(
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
                       labelText: 'Email',
-                      border: OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
                   TextField(
                     controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
+                    obscureText: _obscurePassword,
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
                       labelText: 'Password',
-                      border: OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 30),
-                  _isLoading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                        onPressed: _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.pink,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 58,
-                            vertical: 18,
-                          ),
-                        ),
-                        child: const Text('Login'),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(fontSize: 14, color: Colors.black54),
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ElevatedButton(
+                    onPressed: _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Login',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/signup');
-                    },
+                    onPressed: () => Navigator.pushNamed(context, '/signup'),
                     child: const Text(
-                      'New to YourOldMove？ Create an account',
+                      'New to YourOldMove? Create an account',
                       style: TextStyle(
-                        color: Colors.blueAccent,
-                        fontSize: 14,
+                        fontSize: 15,
+                        color: Colors.deepPurple,
                         decoration: TextDecoration.underline,
                       ),
                     ),
