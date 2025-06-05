@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 class AnimationPage extends StatefulWidget {
@@ -8,12 +9,9 @@ class AnimationPage extends StatefulWidget {
 }
 
 class _AnimationPageState extends State<AnimationPage>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late AnimationController _logoController;
   late Animation<double> _logoAnimation;
-
-  late AnimationController _buttonController;
-  late Animation<double> _buttonAnimation;
 
   @override
   void initState() {
@@ -25,31 +23,26 @@ class _AnimationPageState extends State<AnimationPage>
     );
     _logoAnimation = Tween<double>(begin: 0, end: 1).animate(_logoController);
 
-    _buttonController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    );
-    _buttonAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(_buttonController);
-
     _logoController.forward();
 
-    Timer(const Duration(seconds: 3), (){
+    Future.delayed(const Duration(seconds: 2), _checkLoginStatus);
+  }
+
+  void _checkLoginStatus(){
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user != null){
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+    else{
       Navigator.pushReplacementNamed(context, '/login');
-    });
+    }
   }
 
   @override
   void dispose() {
     _logoController.dispose();
-    _buttonController.dispose();
     super.dispose();
-  }
-
-  void _navigateToLogin() {
-    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
