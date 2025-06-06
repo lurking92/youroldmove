@@ -11,6 +11,7 @@ import 'package:myapp/theme_provider.dart';
 import 'package:myapp/animation.dart';
 import 'package:myapp/login.dart';
 import 'package:myapp/signup.dart';
+import 'package:myapp/forgotpass.dart';
 import 'package:myapp/homepage.dart';
 import 'package:myapp/setting.dart';
 import 'package:myapp/edit_profile.dart';
@@ -76,6 +77,7 @@ class SportApp extends StatelessWidget {
         '/': (context) => const AnimationPage(),
         '/login': (context) => const Login(),
         '/signup': (context) => const Signup(),
+        '/forgot': (context) => const ForgotPassword(),
         '/home': (context) => const HomePage(),
         '/setting': (context) => const SettingsPage(),
         '/profile': (context) => const EditProfilePage(),
