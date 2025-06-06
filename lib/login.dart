@@ -144,7 +144,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () => Navigator.pushNamed(context, '/forgot'),
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(fontSize: 14, color: Colors.black54),
