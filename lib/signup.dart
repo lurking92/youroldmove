@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:myapp/welcomepage.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -121,10 +122,11 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
           'joinedTeamIds': [],
         });
 
-        _showMessage(
-          'Success',
-          'Account created!',
-          onConfirm: () => Navigator.pushReplacementNamed(context, '/home'),
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WelcomePage(userName: _nameController.text.trim()),
+          ),
         );
       }
     } on FirebaseAuthException catch (e) {
