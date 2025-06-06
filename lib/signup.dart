@@ -10,15 +10,6 @@ class Signup extends StatefulWidget {
   State<Signup> createState() => _SignupState();
 }
 
-bool _isValidEmail(String email) {
-  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-  return emailRegex.hasMatch(email);
-}
-
-bool _isValidPassword(String password) {
-  return password.length >= 8;
-}
-
 class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -85,15 +76,21 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
     );
   }
 
+  bool _isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    return emailRegex.hasMatch(email);
+  }
+
+  bool _isValidPassword(String password) {
+    return password.length >= 8;
+  }
+
   void _signup() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _birthDate == null) {
-      _showMessage(
-        'Missing Information',
-        'Please fill in all the required fields.',
-      );
+      _showMessage('Missing Info', 'Please fill in all fields.');
       return;
     }
 
@@ -103,19 +100,16 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
     }
 
     if (!_isValidPassword(_passwordController.text)) {
-      _showMessage(
-        'Weak Password',
-        'Password must be at least 8 characters long.',
-      );
+      _showMessage('Weak Password', 'Password must be at least 8 characters.');
       return;
     }
 
     try {
       final userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
-          );
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
 
       final uid = userCredential.user?.uid;
 
@@ -128,35 +122,32 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
         });
 
         _showMessage(
-          'Sign Up Success',
-          'You have successfully registered.',
-          onConfirm: () {
-            Navigator.pop(context);
-          },
+          'Success',
+          'Account created!',
+          onConfirm: () => Navigator.pushReplacementNamed(context, '/home'),
         );
       }
     } on FirebaseAuthException catch (e) {
-      _showMessage('Sign Up Failed', e.message ?? 'Unknown error occurred');
+      _showMessage('Sign Up Failed', e.message ?? 'Unknown error');
     }
   }
 
   void _showMessage(String title, String message, {VoidCallback? onConfirm}) {
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            title: Text(title),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  if (onConfirm != null) onConfirm();
-                },
-                child: const Text('Confirm'),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (onConfirm != null) onConfirm();
+            },
+            child: const Text('OK'),
           ),
+        ],
+      ),
     );
   }
 
@@ -174,93 +165,142 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Create Account',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Let’s get started with YourOldMove',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                  ),
+                  const SizedBox(height: 40),
+
+                  /// Name
+                  TextField(
+                    controller: _nameController,
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
+                      labelText: 'Full Name',
+                      prefixIcon: const Icon(Icons.person),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                     ),
-                    const SizedBox(height: 30),
-                    TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        border: OutlineInputBorder(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  /// Email
+                  TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: const Icon(Icons.email),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  /// Password
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: const Icon(Icons.lock),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    InkWell(
-                      onTap: _selectBirthDate,
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Birth Date',
-                          border: OutlineInputBorder(),
+                  ),
+                  const SizedBox(height: 20),
+
+                  /// Birth Date
+                  InkWell(
+                    onTap: _selectBirthDate,
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'Birth Date',
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: const Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
                         ),
-                        child: Text(
-                          _birthDate == null
-                              ? 'Select your birth date'
-                              : '${_birthDate!.year}-${_birthDate!.month.toString().padLeft(2, '0')}-${_birthDate!.day.toString().padLeft(2, '0')}',
-                          style: TextStyle(
-                            color:
-                                _birthDate == null ? Colors.grey : Colors.black,
-                          ),
-                        ),
                       ),
-                    ),
-                    const SizedBox(height: 30),
-                    ElevatedButton(
-                      onPressed: _signup,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.pink,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 14,
-                        ),
-                        textStyle: const TextStyle(fontSize: 18),
-                      ),
-                      child: const Text('Sign Up'),
-                    ),
-                    const SizedBox(height: 20),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
-                      child: const Text(
-                        'Already have account？ Sign in here',
+                      child: Text(
+                        _birthDate == null
+                            ? 'Select your birth date'
+                            : '${_birthDate!.year}-${_birthDate!.month.toString().padLeft(2, '0')}-${_birthDate!.day.toString().padLeft(2, '0')}',
                         style: TextStyle(
-                          color: Colors.blueAccent,
-                          fontSize: 14,
-                          decoration: TextDecoration.underline,
+                          color: _birthDate == null ? Colors.grey : Colors.black,
+                          fontSize: 16,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  /// Sign Up Button
+                  ElevatedButton(
+                    onPressed: _signup,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Sign Up',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  /// Link to Login
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
+                    child: const Text(
+                      'Already have an account? Log in here',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.deepPurple,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
