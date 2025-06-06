@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  google_fonts: ^6.1.0
   firebase_core: ^2.27.0
   firebase_auth: ^4.17.0
   cloud_firestore: ^4.15.0
@@ -37,6 +38,7 @@ dependencies:
   # 下面这两行是新增的
   firebase_storage: ^11.0.16
   image_picker: ^0.8.7+5
+  numberpicker: ^2.1.1
   #record、start使用
   share_plus: ^4.5.3
   url_launcher: ^6.2.0
