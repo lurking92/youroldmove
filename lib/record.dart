@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+// 假設您的 ThemeProvider 在另一個檔案中，並已正確引入
+// import 'path/to/your/theme_provider.dart';
+
 class RecordPage extends StatefulWidget {
   const RecordPage({super.key});
 
@@ -42,6 +45,7 @@ class _RecordPageState extends State<RecordPage> {
   Future<void> _loadDaysWithEvents() async {
     if (_isUserLoggedIn) {
       final now = DateTime.now();
+      // Adjust to get the first day of the current month and the last day of the current month
       final firstDayOfMonth = DateTime(now.year, now.month, 1);
       final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
 
@@ -125,29 +129,41 @@ class _RecordPageState extends State<RecordPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 獲取當前主題的亮度
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // 定義在亮色和暗色模式下通用的文字顏色
+    final Color textColor = isDarkMode ? Colors.white : Colors.black87;
+    final Color hintColor = isDarkMode ? Colors.grey[400]! : Colors.grey;
+    final Color dialogTextColor = isDarkMode ? Colors.white70 : Colors.black87;
+
     if (!_isUserLoggedIn) {
       return Scaffold(
-        appBar: AppBar(title: const Text('My Records')),
+        appBar: AppBar(
+          title: Text(
+            'My Records',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : null, // 調整 AppBar 標題顏色
+            ),
+          ),
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 'Please log in to view your workout records',
-                style: TextStyle(fontSize: 20), // 再次放大
+                style: TextStyle(fontSize: 20, color: hintColor),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/login',
-                  ); // Assuming you have a login page
+                  Navigator.pushNamed(context, '/login');
                 },
                 child: const Text(
                   'Go to Login',
                   style: TextStyle(fontSize: 18),
-                ), // 再次放大
+                ),
               ),
             ],
           ),
@@ -157,11 +173,16 @@ class _RecordPageState extends State<RecordPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'My Workout Records',
-          style: TextStyle(fontSize: 24),
-        ), // 再次放大 App Bar 標題
-        backgroundColor: Colors.redAccent,
+          style: TextStyle(
+            fontSize: 24,
+            color:
+                isDarkMode ? Colors.white : Colors.redAccent, // AppBar 標題顏色調整
+          ),
+        ),
+        backgroundColor:
+            isDarkMode ? Colors.grey[850] : Colors.redAccent, // AppBar 背景色調整
         elevation: 4,
       ),
       body: Column(
@@ -191,40 +212,44 @@ class _RecordPageState extends State<RecordPage> {
                 return [];
               }
             },
-            headerStyle: const HeaderStyle(
+            headerStyle: HeaderStyle(
               formatButtonVisible: false,
               titleCentered: true,
               titleTextStyle: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 22.0, // 再次放大日曆頭部文字
+                color:
+                    isDarkMode ? Colors.white : Colors.redAccent, // 日曆頭部文字顏色調整
+                fontSize: 22.0,
                 fontWeight: FontWeight.bold,
               ),
               leftChevronIcon: Icon(
                 Icons.chevron_left,
-                color: Colors.grey,
+                color: isDarkMode ? Colors.white70 : Colors.grey, // 箭頭圖示顏色調整
                 size: 30,
-              ), // 再次放大箭頭圖示
+              ),
               rightChevronIcon: Icon(
                 Icons.chevron_right,
-                color: Colors.grey,
+                color: isDarkMode ? Colors.white70 : Colors.grey, // 箭頭圖示顏色調整
                 size: 30,
-              ), // 再次放大箭頭圖示
+              ),
             ),
             calendarStyle: CalendarStyle(
               outsideDaysVisible: false,
-              weekendTextStyle: const TextStyle(
-                color: Colors.red,
+              weekendTextStyle: TextStyle(
+                color: isDarkMode ? Colors.red[300] : Colors.red, // 週末文字顏色調整
                 fontSize: 18,
-              ), // 再次放大週末文字
-              defaultTextStyle: const TextStyle(fontSize: 18), // 再次放大預設日期文字
+              ),
+              defaultTextStyle: TextStyle(
+                fontSize: 18,
+                color: textColor, // 預設日期文字顏色調整
+              ),
               todayTextStyle: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
-              ), // 再次放大今天文字
+              ),
               selectedTextStyle: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
-              ), // 再次放大選中日期文字
+              ),
               selectedDecoration: BoxDecoration(
                 color: Colors.redAccent.withOpacity(0.7),
                 shape: BoxShape.circle,
@@ -245,13 +270,13 @@ class _RecordPageState extends State<RecordPage> {
           Expanded(
             child:
                 _selectedDay == null
-                    ? const Center(
+                    ? Center(
                       child: Text(
                         'Please select a date to view records',
                         style: TextStyle(
                           fontSize: 20,
-                          color: Colors.grey,
-                        ), // 再次放大提示文字
+                          color: hintColor, // 提示文字顏色調整
+                        ),
                       ),
                     )
                     : StreamBuilder<List<Record>>(
@@ -268,23 +293,26 @@ class _RecordPageState extends State<RecordPage> {
                           return Center(
                             child: Text(
                               'Error loading data: ${snapshot.error}',
-                              style: const TextStyle(
-                                color: Colors.red,
+                              style: TextStyle(
+                                color:
+                                    isDarkMode
+                                        ? Colors.red[300]
+                                        : Colors.red, // 錯誤文字顏色調整
                                 fontSize: 20,
-                              ), // 再次放大錯誤文字
+                              ),
                             ),
                           );
                         }
 
                         final records = snapshot.data ?? [];
                         if (records.isEmpty) {
-                          return const Center(
+                          return Center(
                             child: Text(
                               'No records for this day',
                               style: TextStyle(
                                 fontSize: 20,
-                                color: Colors.grey,
-                              ), // 再次放大提示文字
+                                color: hintColor, // 提示文字顏色調整
+                              ),
                             ),
                           );
                         }
@@ -303,6 +331,10 @@ class _RecordPageState extends State<RecordPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[900]
+                                      : null, // 卡片背景色調整
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
                                 child: Column(
@@ -315,10 +347,10 @@ class _RecordPageState extends State<RecordPage> {
                                         Expanded(
                                           child: Text(
                                             r.target,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 22, // 再次放大目標名稱
-                                              color: Colors.deepPurple,
+                                              fontSize: 22,
+                                              color: textColor, // 目標名稱顏色調整
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -328,36 +360,49 @@ class _RecordPageState extends State<RecordPage> {
                                           const Icon(
                                             Icons.check_circle,
                                             color: Colors.green,
-                                            size: 24, // 再次放大圖示
+                                            size: 24,
                                           )
                                         else
                                           const Icon(
                                             Icons.warning,
                                             color: Colors.orange,
-                                            size: 24, // 再次放大圖示
+                                            size: 24,
                                           ),
                                         IconButton(
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.delete_outline,
-                                            color: Colors.grey,
-                                            size: 28, // 再次放大刪除圖示
+                                            color:
+                                                isDarkMode
+                                                    ? Colors.white70
+                                                    : Colors.grey, // 刪除圖示顏色調整
+                                            size: 28,
                                           ),
                                           onPressed: () {
                                             showDialog(
                                               context: context,
                                               builder:
                                                   (context) => AlertDialog(
-                                                    title: const Text(
+                                                    backgroundColor:
+                                                        isDarkMode
+                                                            ? Colors.grey[800]
+                                                            : null, // AlertDialog 背景色調整
+                                                    title: Text(
                                                       'Delete Record',
                                                       style: TextStyle(
                                                         fontSize: 20,
+                                                        color:
+                                                            isDarkMode
+                                                                ? Colors.white
+                                                                : null, // 標題顏色調整
                                                       ),
-                                                    ), // 再次放大標題
+                                                    ),
                                                     content: Text(
                                                       'Are you sure you want to delete the record for "${r.target}" on ${_formatTimestamp(r.timestamp)}?',
-                                                      style: const TextStyle(
+                                                      style: TextStyle(
                                                         fontSize: 18,
-                                                      ), // 再次放大內容
+                                                        color:
+                                                            dialogTextColor, // 內容顏色調整
+                                                      ),
                                                     ),
                                                     actions: [
                                                       TextButton(
@@ -365,12 +410,17 @@ class _RecordPageState extends State<RecordPage> {
                                                             () => Navigator.pop(
                                                               context,
                                                             ),
-                                                        child: const Text(
+                                                        child: Text(
                                                           'Cancel',
                                                           style: TextStyle(
                                                             fontSize: 18,
+                                                            color:
+                                                                isDarkMode
+                                                                    ? Colors
+                                                                        .blue[300]
+                                                                    : null, // 按鈕文字顏色調整
                                                           ),
-                                                        ), // 再次放大按鈕文字
+                                                        ),
                                                       ),
                                                       TextButton(
                                                         onPressed: () {
@@ -379,13 +429,18 @@ class _RecordPageState extends State<RecordPage> {
                                                           );
                                                           _deleteRecord(r);
                                                         },
-                                                        child: const Text(
+                                                        child: Text(
                                                           'Delete',
                                                           style: TextStyle(
-                                                            color: Colors.red,
+                                                            color:
+                                                                isDarkMode
+                                                                    ? Colors
+                                                                        .red[300]
+                                                                    : Colors
+                                                                        .red, // 按鈕文字顏色調整
                                                             fontSize: 18,
                                                           ),
-                                                        ), // 再次放大按鈕文字
+                                                        ),
                                                       ),
                                                     ],
                                                   ),
@@ -402,36 +457,43 @@ class _RecordPageState extends State<RecordPage> {
                                         Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(
+                                            Icon(
                                               Icons.timer,
                                               size: 20,
-                                              color: Colors.blueGrey,
-                                            ), // 再次放大圖示
-                                            const SizedBox(width: 8), // 增加間距
+                                              color:
+                                                  isDarkMode
+                                                      ? Colors.blueGrey[200]
+                                                      : Colors
+                                                          .blueGrey, // 圖示顏色調整
+                                            ),
+                                            const SizedBox(width: 8),
                                             Text(
                                               '${r.duration}',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 19,
-                                                color: Colors.black87,
-                                              ), // 再次放大文字
+                                                color: textColor, // 文字顏色調整
+                                              ),
                                             ),
                                           ],
                                         ),
                                         Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            const Icon(
+                                            Icon(
                                               Icons.local_fire_department,
                                               size: 20,
-                                              color: Colors.red,
-                                            ), // 再次放大圖示
-                                            const SizedBox(width: 8), // 增加間距
+                                              color:
+                                                  isDarkMode
+                                                      ? Colors.red[300]
+                                                      : Colors.red, // 圖示顏色調整
+                                            ),
+                                            const SizedBox(width: 8),
                                             Text(
                                               '${r.calories} kcal',
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 19,
-                                                color: Colors.black87,
-                                              ), // 再次放大文字
+                                                color: textColor, // 文字顏色調整
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -440,18 +502,21 @@ class _RecordPageState extends State<RecordPage> {
                                           Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const Icon(
+                                              Icon(
                                                 Icons.directions_run,
                                                 size: 20,
-                                                color: Colors.teal,
-                                              ), // 再次放大圖示
-                                              const SizedBox(width: 8), // 增加間距
+                                                color:
+                                                    isDarkMode
+                                                        ? Colors.teal[200]
+                                                        : Colors.teal, // 圖示顏色調整
+                                              ),
+                                              const SizedBox(width: 8),
                                               Text(
                                                 '${r.distanceKm!.toStringAsFixed(2)} km',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 19,
-                                                  color: Colors.black87,
-                                                ), // 再次放大文字
+                                                  color: textColor, // 文字顏色調整
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -459,18 +524,22 @@ class _RecordPageState extends State<RecordPage> {
                                           Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              const Icon(
+                                              Icon(
                                                 Icons.directions_walk,
                                                 size: 20,
-                                                color: Colors.purple,
-                                              ), // 再次放大圖示
-                                              const SizedBox(width: 8), // 增加間距
+                                                color:
+                                                    isDarkMode
+                                                        ? Colors.purple[200]
+                                                        : Colors
+                                                            .purple, // 圖示顏色調整
+                                              ),
+                                              const SizedBox(width: 8),
                                               Text(
                                                 '${r.steps} steps',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 19,
-                                                  color: Colors.black87,
-                                                ), // 再次放大文字
+                                                  color: textColor, // 文字顏色調整
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -482,8 +551,8 @@ class _RecordPageState extends State<RecordPage> {
                                       child: Text(
                                         'Recorded at: ${_formatTimestamp(r.timestamp)}',
                                         style: TextStyle(
-                                          fontSize: 15, // 再次放大時間戳
-                                          color: Colors.grey.shade600,
+                                          fontSize: 15,
+                                          color: hintColor, // 時間戳顏色調整
                                         ),
                                       ),
                                     ),
