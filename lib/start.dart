@@ -4,9 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:myapp/record.dart';
 
-// ✅ Move enum outside of class
-enum PredefinedTarget { slowWalk30, slowRun15 }
+enum PredefinedTarget { easy, medium, hard }
 
 enum NextTargetType { predefined, custom }
 
@@ -23,18 +23,18 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
   Duration _elapsed = Duration.zero;
   bool _isRunning = false;
   NextTargetType _nextTargetType = NextTargetType.predefined;
-  PredefinedTarget _predefinedTarget = PredefinedTarget.slowWalk30;
-  Duration _customTarget = Duration(minutes: 20);
+  PredefinedTarget _predefinedTarget = PredefinedTarget.easy;
+  Duration _customTarget = const Duration(minutes: 01);
   double _weightKg = 60.0;
   bool _targetReached = false;
   bool _isWeightLoaded = false;
-  final TextEditingController _weightController = TextEditingController();
-  Timer? _weightSaveTimer; // 👈 新增這一行
-  double? _tempWeight; // 👈 新增這一行，暫存輸入中的體重
-  bool _incompleteSaved = false; // 新增：是否已儲存過未完成的紀錄
-  bool _completeSaved = false; // 新增：是否已儲存過完成的紀錄
+  bool _incompleteSaved = false;
+  bool _completeSaved = false;
 
   String? _userId;
+
+  // 再次調整老年人平均步頻，降低到更符合非常慢的速度
+  double _stepsPerMinute = 30.0; // 從 50 降低到 30 步/分鐘，非常慢的走路速度
 
   @override
   void initState() {
@@ -45,14 +45,10 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
       _loadWeightFromFirestore();
     } else {
       _isWeightLoaded = true;
-      _weightController.text = _weightKg.toString(); // 設定預設值到 controller
     }
-    print("Current User UID: $_userId");
-    // 一進畫面就初始化旗標
     _resetSaveFlags();
   }
 
-  // 每次新一輪計時時呼叫
   void _resetSaveFlags() {
     _incompleteSaved = false;
     _completeSaved = false;
@@ -63,7 +59,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
       try {
         DocumentSnapshot doc =
             await FirebaseFirestore.instance
-                .collection('users')
+                .collection('healthData')
                 .doc(_userId)
                 .get();
         if (doc.exists && doc.data() != null) {
@@ -71,34 +67,15 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
             _weightKg =
                 (doc.data() as Map<String, dynamic>)['weight'] as double? ??
                 60.0;
-            _weightController.text =
-                _weightKg.toString(); // 👈 設定載入的值到 controller
             _isWeightLoaded = true;
           });
         } else {
           _isWeightLoaded = true;
-          _weightController.text = _weightKg.toString(); // 設定預設值到 controller
         }
       } catch (e) {
         print("Error loading weight from Firestore: $e");
         _isWeightLoaded = true;
-        _weightController.text = _weightKg.toString(); // 設定預設值到 controller
       }
-    }
-  }
-
-  Future<void> _saveWeightToFirestore(double weight) async {
-    if (_userId != null) {
-      try {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(_userId) // 👈 確保指定使用者的 document ID
-            .set({'weight': weight}, SetOptions(merge: true));
-      } catch (e) {
-        print("Error saving weight to Firestore: $e");
-      }
-    } else {
-      print("User not logged in, cannot save weight.");
     }
   }
 
@@ -115,7 +92,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
       _timer?.cancel();
     } else if (state == AppLifecycleState.resumed && _isRunning) {
       _startTime = DateTime.now().subtract(_elapsed);
-      _timer = Timer.periodic(Duration(seconds: 1), (_) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         setState(() {
           _elapsed = DateTime.now().difference(_startTime!);
         });
@@ -127,10 +104,12 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
     if (_isRunning) {
       _timer?.cancel();
     } else {
-      // 開始新一輪 → 清除儲存旗標
       _resetSaveFlags();
       _startTime = DateTime.now().subtract(_elapsed);
-      _timer = Timer.periodic(Duration(seconds: 1), (_) => _updateElapsed());
+      _timer = Timer.periodic(
+        const Duration(seconds: 1),
+        (_) => _updateElapsed(),
+      );
     }
     setState(() => _isRunning = !_isRunning);
   }
@@ -146,24 +125,38 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
     });
   }
 
+  // 調整卡路里計算，使之更慢
   double _calculateCalories(Duration elapsed) {
-    double metValue = 2.0;
+    // 降低 MET 值，例如從 2.0 降至 1.5 或更低，代表活動強度更低，卡路里消耗更慢
+    double metValue = 1.5; // 從 2.0 降低到 1.5
     double durationInHours =
         elapsed.inMinutes / 60.0 + elapsed.inSeconds / 3600.0;
     return metValue * _weightKg * durationInHours;
   }
 
+  // 根據走路時間推測距離 (速度保持不變)
+  double _calculateDistanceByTime(Duration elapsed) {
+    const double walkingSpeedMetersPerSecond = 0.5; // 老年人平均步行速度為 0.5 米/秒
+    return elapsed.inSeconds * walkingSpeedMetersPerSecond / 1000; // 返回公里
+  }
+
+  // 根據時間推測步數 (老年人公式，再次降低步頻)
+  int _calculateSteps(Duration elapsed) {
+    return (elapsed.inSeconds * (_stepsPerMinute / 60)).round();
+  }
+
   String _predefinedTargetLabel(PredefinedTarget target) {
     switch (target) {
-      case PredefinedTarget.slowWalk30:
-        return '30 min slow walk';
-      case PredefinedTarget.slowRun15:
-        return '15 min slow jog';
+      case PredefinedTarget.easy:
+        return 'Easy (20 min)';
+      case PredefinedTarget.medium:
+        return 'Medium (40 min)';
+      case PredefinedTarget.hard:
+        return 'Hard (60 min)';
     }
   }
 
   void _showCustomTimePicker() {
-    // 👈 補上這個方法
     showModalBottomSheet(
       context: context,
       builder: (BuildContext builder) {
@@ -182,7 +175,6 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
   }
 
   void _resetWorkout() {
-    // 只有在還沒完成、且還沒儲存過「未完成」時才存一次
     if (!_targetReached && !_incompleteSaved) {
       _saveRecordToFirestore(false);
       _incompleteSaved = true;
@@ -202,12 +194,11 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
         String targetDescription = '';
         if (_nextTargetType == NextTargetType.predefined) {
           targetDescription = _predefinedTargetLabel(_predefinedTarget);
-        } else if (_nextTargetType == NextTargetType.custom) {
+        } else {
           targetDescription = 'Custom: ${_formatDuration(_customTarget)}';
         }
 
         final recordData = {
-          // <-- 打印這個 Map
           'type':
               _nextTargetType == NextTargetType.predefined
                   ? 'predefined'
@@ -215,24 +206,22 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
           'target': targetDescription,
           'duration': _formatDuration(_elapsed),
           'calories': _calculateCalories(_elapsed).toStringAsFixed(1),
+          'distance_time_based_km': _calculateDistanceByTime(
+            _elapsed,
+          ).toStringAsFixed(2), // 根據時間推測距離
+          'steps': _calculateSteps(_elapsed), // 只儲存步數
           'timestamp': now,
           'completed': completed,
         };
-        print(
-          "Attempting to save record for user $_userId: $recordData",
-        ); // <-- 新增打印
 
         await FirebaseFirestore.instance
             .collection('users')
             .doc(_userId)
             .collection('records')
-            .add(recordData); // 使用準備好的 Map
-        print('Record saved to Firestore');
+            .add(recordData);
       } catch (e) {
         print('Error saving record: $e');
       }
-    } else {
-      print('User not logged in, cannot save record.');
     }
   }
 
@@ -247,9 +236,9 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
               children: [
                 Container(
                   alignment: Alignment.centerRight,
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextButton(
-                    child: Text('Done'),
+                    child: const Text('Done'),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -284,19 +273,21 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
   ) {
     Duration targetDuration;
     switch (target) {
-      case PredefinedTarget.slowWalk30:
-        targetDuration = Duration(minutes: 30);
+      case PredefinedTarget.easy:
+        targetDuration = const Duration(minutes: 20);
         break;
-      case PredefinedTarget.slowRun15:
-        targetDuration = Duration(minutes: 15);
+      case PredefinedTarget.medium:
+        targetDuration = const Duration(minutes: 40);
+        break;
+      case PredefinedTarget.hard:
+        targetDuration = const Duration(hours: 1);
         break;
     }
+
     if (elapsed >= targetDuration && !_targetReached) {
-      setState(() {
-        _targetReached = true;
-      });
+      setState(() => _targetReached = true);
       _showCongratulationsDialog();
-      _toggleTimer(); // 停止計時器
+      _toggleTimer();
     }
   }
 
@@ -306,7 +297,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
         _targetReached = true;
       });
       _showCongratulationsDialog();
-      _toggleTimer(); // 停止計時器
+      _toggleTimer();
     }
   }
 
@@ -315,19 +306,17 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
       context: context,
       builder:
           (_) => AlertDialog(
-            title: Text('Congratulations!'),
-            content: Text("You've reached your goal!"),
+            title: const Text('Congratulations!'),
+            content: const Text("You've reached your goal!"),
             actions: [
               TextButton(
-                child: Text('OK'),
+                child: const Text('OK'),
                 onPressed: () {
                   Navigator.of(context).pop();
-                  // 只有第一次完成才存一次
                   if (!_completeSaved) {
                     _saveRecordToFirestore(true);
                     _completeSaved = true;
                   }
-                  // 完成後就結束並重置畫面
                   _resetWorkout();
                 },
               ),
@@ -346,150 +335,583 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final kcal = _calculateCalories(_elapsed);
+    final distanceKmTimeBased = _calculateDistanceByTime(_elapsed); // 根據時間計算距離
+    final totalSteps = _calculateSteps(_elapsed); // 計算步數
+
     return Scaffold(
-      appBar: AppBar(title: Text('Slow Jog Start')),
+      backgroundColor: Colors.orange[50],
+      appBar: AppBar(
+        title: const Text(
+          'Slow Jog Timer',
+          style: TextStyle(
+            fontSize: 20, // 字體更小
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            letterSpacing: 0.5,
+          ),
+        ),
+        backgroundColor: Colors.redAccent,
+        elevation: 2, // 陰影更小
+        centerTitle: true,
+        toolbarHeight: 60, // 高度更小
+      ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 20.0,
+        ), // 調整整體 padding
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            // 計時卡片
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 20), // 調整底部間距
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.orange.shade100, // 調整漸層顏色
+                    Colors.orange.shade300,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(15), // 調整圓角
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(0.2), // 調整陰影顏色和透明度
+                    blurRadius: 10, // 調整模糊半徑
+                    offset: const Offset(0, 5),
+                  ),
+                ],
               ),
-              margin: EdgeInsets.only(bottom: 24),
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Text(
-                      _elapsed.toString().split('.').first,
-                      style: TextStyle(
-                        fontSize: 48,
+              padding: const EdgeInsets.symmetric(
+                vertical: 25,
+                horizontal: 20,
+              ), // 調整 padding
+              child: Column(
+                children: [
+                  Text(
+                    _formatDuration(_elapsed),
+                    style: const TextStyle(
+                      // 將顏色改為黑色
+                      fontSize: 55, // 字體更小
+                      fontWeight: FontWeight.w800, // 字體粗細調整
+                      color: Colors.black, // 修改計時器數字顏色為黑色
+                      letterSpacing: 2,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  const SizedBox(height: 12), // 調整間距
+                  // 卡路里顯示 (格式調整)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ), // 調整 padding
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade500, // 調整背景顏色
+                      borderRadius: BorderRadius.circular(12), // 調整圓角
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      '${kcal.toStringAsFixed(1)} Kcal',
+                      style: const TextStyle(
+                        fontSize: 20, // 字體更小
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    SizedBox(height: 8),
-                    Text(
-                      '${kcal.toStringAsFixed(1)} Kcal',
-                      style: TextStyle(fontSize: 24, color: Colors.green[700]),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            TextField(
-              key: ValueKey(_weightKg),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Your weight (kg)',
-                border: OutlineInputBorder(),
-              ),
-              controller: _weightController,
-              onChanged: (value) {
-                final parsed = double.tryParse(value);
-                if (parsed != null) {
-                  setState(() => _tempWeight = parsed); // 暫存輸入的值
-
-                  if (_weightSaveTimer?.isActive ?? false) {
-                    _weightSaveTimer?.cancel(); // 取消之前的 timer
-                  }
-                  _weightSaveTimer = Timer(Duration(milliseconds: 2000), () {
-                    // 延遲 2 秒後儲存
-                    if (_tempWeight != null && _tempWeight != _weightKg) {
-                      setState(() => _weightKg = _tempWeight!);
-                      _saveWeightToFirestore(_weightKg);
-                    }
-                  });
-                }
-              },
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Goal type:'),
-                SizedBox(width: 16),
-                DropdownButton<NextTargetType>(
-                  value: _nextTargetType,
-                  items: [
-                    DropdownMenuItem(
-                      value: NextTargetType.predefined,
-                      child: Text('Predefined'),
-                    ),
-                    DropdownMenuItem(
-                      value: NextTargetType.custom,
-                      child: Text('Custom'),
-                    ),
-                  ],
-                  onChanged: (v) => setState(() => _nextTargetType = v!),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            if (_nextTargetType == NextTargetType.predefined)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Goal:'),
-                  SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: _showPredefinedPicker,
-                    child: Text(_predefinedTargetLabel(_predefinedTarget)),
+                  ),
+                  const SizedBox(height: 10), // 新增間距
+                  // 距離和步數並排顯示
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center, // 水平居中
+                    children: [
+                      // 距離顯示 (新的容器樣式)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade500,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '${distanceKmTimeBased.toStringAsFixed(2)} km',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 20), // 增加間距
+                      // 步數顯示 (新的容器樣式)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade500,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '$totalSteps Steps', // 修改標籤為 'Steps'
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            if (_nextTargetType == NextTargetType.custom)
-              Column(
-                children: [
-                  Text('Custom time: ${_formatDuration(_customTarget)}'),
-                  SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _showCustomTimePicker,
-                    child: Text('Set Time'),
+            ),
+
+            // 目標設定卡片
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20), // 調整 padding
+              margin: const EdgeInsets.only(bottom: 20), // 調整底部間距
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12), // 調整圓角
+                border: Border.all(
+                  color: Colors.orange.shade200,
+                  width: 1.5,
+                ), // 調整邊框顏色和粗細
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-            SizedBox(height: 32),
+              child: Column(
+                children: [
+                  // Goal Type 標題
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.flag,
+                        size: 24,
+                        color: Colors.orange.shade600,
+                      ), // 圖示微調大
+                      const SizedBox(width: 10), // 調整間距
+                      Text(
+                        'Goal Type',
+                        style: TextStyle(
+                          fontSize: 19, // 字體加大
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 18), // 調整間距
+                  // 左右選擇按鈕 (Predefined / Custom) - 整合風格
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _nextTargetType = NextTargetType.predefined;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            decoration: BoxDecoration(
+                              color:
+                                  _nextTargetType == NextTargetType.predefined
+                                      ? Colors
+                                          .orange
+                                          .shade600 // 選中時的橘色
+                                      : Colors.orange.shade200, // 未選中時的深一點橘色
+                              borderRadius: BorderRadius.circular(
+                                12,
+                              ), // 與Kcal統一的圓角
+                              border: Border.all(
+                                color:
+                                    _nextTargetType == NextTargetType.predefined
+                                        ? Colors.orange.shade800!
+                                        : Colors.orange.shade400!,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                // 添加陰影以匹配 Kcal 樣式
+                                BoxShadow(
+                                  color: (_nextTargetType ==
+                                              NextTargetType.predefined
+                                          ? Colors.orange
+                                          : Colors.grey)
+                                      .withOpacity(0.2),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.schedule,
+                                  size: 24,
+                                  color:
+                                      _nextTargetType ==
+                                              NextTargetType.predefined
+                                          ? Colors.white
+                                          : Colors.grey.shade800,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Predefined',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        _nextTargetType ==
+                                                NextTargetType.predefined
+                                            ? Colors.white
+                                            : Colors.grey.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _nextTargetType = NextTargetType.custom;
+                            });
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            decoration: BoxDecoration(
+                              color:
+                                  _nextTargetType == NextTargetType.custom
+                                      ? Colors.orange.shade600
+                                      : Colors.orange.shade200,
+                              borderRadius: BorderRadius.circular(
+                                12,
+                              ), // 與Kcal統一的圓角
+                              border: Border.all(
+                                color:
+                                    _nextTargetType == NextTargetType.custom
+                                        ? Colors.orange.shade800!
+                                        : Colors.orange.shade400!,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                // 添加陰影以匹配 Kcal 樣式
+                                BoxShadow(
+                                  color: (_nextTargetType ==
+                                              NextTargetType.custom
+                                          ? Colors.orange
+                                          : Colors.grey)
+                                      .withOpacity(0.2),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.tune,
+                                  size: 24,
+                                  color:
+                                      _nextTargetType == NextTargetType.custom
+                                          ? Colors.white
+                                          : Colors.grey.shade800,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Custom',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        _nextTargetType == NextTargetType.custom
+                                            ? Colors.white
+                                            : Colors.grey.shade800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  if (_nextTargetType == NextTargetType.predefined)
+                    Column(
+                      children: [
+                        Text(
+                          'Select Goal:', // Predefined Time 的標題
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: _showPredefinedPicker,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange.shade400,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 15,
+                              horizontal: 25,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                12,
+                              ), // 與Kcal統一的圓角
+                            ),
+                            elevation: 3,
+                          ),
+                          child: Text(
+                            _predefinedTargetLabel(_predefinedTarget),
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                  if (_nextTargetType == NextTargetType.custom)
+                    Column(
+                      children: [
+                        const Text(
+                          // 修改字體顏色為黑色
+                          'Custom Time:',
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black, // 修改 Custom Time 字體顏色為黑色
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Custom Time 時間顯示 (整合風格)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade500, // 與Kcal按鈕背景色一致
+                                borderRadius: BorderRadius.circular(
+                                  12,
+                                ), // 與Kcal統一的圓角
+                                boxShadow: [
+                                  // 添加陰影以匹配 Kcal 樣式
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                _formatDuration(_customTarget),
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white, // 文字顏色改為白色
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+                            // Set Time 按鈕 (整合風格)
+                            ElevatedButton(
+                              onPressed: _showCustomTimePicker,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Colors.orange.shade500, // 與Kcal按鈕背景色一致
+                                foregroundColor: Colors.black, // 文字顏色改為黑色
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 15,
+                                  horizontal: 25,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    12,
+                                  ), // 與Kcal統一的圓角
+                                ),
+                                elevation: 3, // 陰影保持
+                              ),
+                              child: const Text(
+                                'Set Time',
+                                style: TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black, // 修改 Set Time 字體顏色為黑色
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+
+            // 控制按鈕
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // Start / Pause
-                ElevatedButton.icon(
-                  icon: Icon(_isRunning ? Icons.pause : Icons.play_arrow),
-                  label: Text(
-                    _isRunning ? 'Pause' : 'Start',
-                    style: TextStyle(fontSize: 18),
+                // START / PAUSE
+                Expanded(
+                  child: SizedBox(
+                    height: 60,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange.shade400, // 按鈕顏色統一為橘色
+                        foregroundColor: Colors.black, // 文字顏色改為黑色
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15), // 調整圓角
+                        ),
+                        elevation: 4, // 陰影更小
+                      ),
+                      onPressed: _toggleTimer,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _isRunning ? Icons.pause_circle : Icons.play_circle,
+                            size: 30, // 圖示微調大
+                            color: Colors.black, // 修改 START/PAUSE 圖示顏色為黑色
+                          ),
+                          const SizedBox(width: 10), // 調整間距
+                          Text(
+                            _isRunning ? 'PAUSE' : 'START',
+                            style: const TextStyle(
+                              fontSize: 19, // 字體加大
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  ),
-                  onPressed: _toggleTimer,
                 ),
-                // Reset (moved here, same style as Start)
-                ElevatedButton.icon(
-                  icon: Icon(Icons.restart_alt),
-                  label: Text('Reset', style: TextStyle(fontSize: 18)),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    // no backgroundColor override → uses same default (green)
+                const SizedBox(width: 15), // 調整間距
+                // RESET
+                Expanded(
+                  child: SizedBox(
+                    height: 60, // 高度微調大
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange.shade400, // 按鈕顏色統一為橘色
+                        foregroundColor: Colors.black, // 文字顏色改為黑色
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15), // 調整圓角
+                        ),
+                        elevation: 4, // 陰影更小
+                      ),
+                      onPressed: _resetWorkout,
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.restart_alt,
+                            size: 28,
+                            color: Colors.black, // 修改 RESET 圖示顏色為黑色
+                          ), // 圖示微調大
+                          SizedBox(width: 10), // 調整間距
+                          Text(
+                            'RESET',
+                            style: TextStyle(
+                              fontSize: 19, // 字體加大
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  onPressed: _resetWorkout,
                 ),
               ],
             ),
-            SizedBox(height: 16),
 
-            TextButton.icon(
-              icon: Icon(Icons.history),
-              label: Text('View History', style: TextStyle(fontSize: 16)),
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            const SizedBox(height: 25), // 調整間距
+            // 查看紀錄按鈕
+            SizedBox(
+              width: double.infinity,
+              height: 55, // 高度微調大
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: Colors.orange.shade400,
+                    width: 2,
+                  ), // 調整邊框顏色和粗細
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15), // 調整圓角
+                  ),
+                  foregroundColor: Colors.orange.shade700, // 文字顏色調整
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RecordPage(),
+                    ), // 正確導航到 RecordPage
+                  ); // TODO: Implement navigation to records page
+                },
+                child: const Text(
+                  'VIEW RECORDS',
+                  style: TextStyle(
+                    fontSize: 18, // 字體更小
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
               ),
-              onPressed: () {
-                Navigator.pushNamed(context, '/record');
-              },
             ),
           ],
         ),
