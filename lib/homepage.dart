@@ -339,9 +339,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       Text(
                                         _currentDate,
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                        ),
+                                        style: TextStyle(color: Colors.black),
                                       ),
                                     ],
                                   ),
@@ -786,8 +784,12 @@ class _RunCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            duration,
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
+            'Time : $duration',
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -845,7 +847,11 @@ class _RunCard extends StatelessWidget {
               // 如果 difficulty 是 '?' 或 null，則顯示 'UNKNOWN' 或保持 '?'
               // 否則顯示大寫的難度，如果 'failed' 顯示 'FAILED'
               (difficulty == '?') ? 'UNKNOWN' : difficulty.toUpperCase(),
-              style: TextStyle(fontSize: 16, color: iconColor),
+              style: TextStyle(
+                fontSize: 16,
+                color: iconColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
