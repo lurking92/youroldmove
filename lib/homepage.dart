@@ -749,7 +749,7 @@ class _RunCard extends StatelessWidget {
         iconColor = Colors.green;
         break;
       case 'medium':
-        iconColor = Colors.yellow; // Medium 改為黃色
+        iconColor = Colors.lightBlue;
         break;
       case 'hard':
         iconColor = Colors.orange; // Hard 改為橘色
