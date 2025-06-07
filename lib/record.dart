@@ -106,7 +106,7 @@ class _RecordPageState extends State<RecordPage> {
         print('Successfully deleted record, ID: ${record.id}');
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Record deleted')));
+        ).showSnackBar(const SnackBar(content: Text('Record deleted')));
       } catch (e) {
         print('Error deleting record: $e');
         ScaffoldMessenger.of(
@@ -127,13 +127,16 @@ class _RecordPageState extends State<RecordPage> {
   Widget build(BuildContext context) {
     if (!_isUserLoggedIn) {
       return Scaffold(
-        appBar: AppBar(title: Text('My Records')),
+        appBar: AppBar(title: const Text('My Records')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Please log in to view your workout records'),
-              SizedBox(height: 20),
+              const Text(
+                'Please log in to view your workout records',
+                style: TextStyle(fontSize: 20), // 再次放大
+              ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushNamed(
@@ -141,7 +144,10 @@ class _RecordPageState extends State<RecordPage> {
                     '/login',
                   ); // Assuming you have a login page
                 },
-                child: Text('Go to Login'),
+                child: const Text(
+                  'Go to Login',
+                  style: TextStyle(fontSize: 18),
+                ), // 再次放大
               ),
             ],
           ),
@@ -150,7 +156,14 @@ class _RecordPageState extends State<RecordPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('My Workout Records')),
+      appBar: AppBar(
+        title: const Text(
+          'My Workout Records',
+          style: TextStyle(fontSize: 24),
+        ), // 再次放大 App Bar 標題
+        backgroundColor: Colors.redAccent,
+        elevation: 4,
+      ),
       body: Column(
         children: [
           TableCalendar(
@@ -178,135 +191,301 @@ class _RecordPageState extends State<RecordPage> {
                 return [];
               }
             },
+            headerStyle: const HeaderStyle(
+              formatButtonVisible: false,
+              titleCentered: true,
+              titleTextStyle: TextStyle(
+                color: Colors.redAccent,
+                fontSize: 22.0, // 再次放大日曆頭部文字
+                fontWeight: FontWeight.bold,
+              ),
+              leftChevronIcon: Icon(
+                Icons.chevron_left,
+                color: Colors.grey,
+                size: 30,
+              ), // 再次放大箭頭圖示
+              rightChevronIcon: Icon(
+                Icons.chevron_right,
+                color: Colors.grey,
+                size: 30,
+              ), // 再次放大箭頭圖示
+            ),
             calendarStyle: CalendarStyle(
-              markersMaxCount: 3,
-              markerDecoration: BoxDecoration(
-                color: Colors.green, // You can change the color if needed
+              outsideDaysVisible: false,
+              weekendTextStyle: const TextStyle(
+                color: Colors.red,
+                fontSize: 18,
+              ), // 再次放大週末文字
+              defaultTextStyle: const TextStyle(fontSize: 18), // 再次放大預設日期文字
+              todayTextStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+              ), // 再次放大今天文字
+              selectedTextStyle: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+              ), // 再次放大選中日期文字
+              selectedDecoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.7),
                 shape: BoxShape.circle,
               ),
+              todayDecoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+              markerDecoration: BoxDecoration(
+                color: Colors.lightGreen,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              markersMaxCount: 1,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Expanded(
             child:
                 _selectedDay == null
-                    ? Center(
-                      child: Text('Please select a date to view records'),
+                    ? const Center(
+                      child: Text(
+                        'Please select a date to view records',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.grey,
+                        ), // 再次放大提示文字
+                      ),
                     )
                     : StreamBuilder<List<Record>>(
                       stream: _eventsForDay(_selectedDay!),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         }
 
                         if (snapshot.hasError) {
                           return Center(
                             child: Text(
                               'Error loading data: ${snapshot.error}',
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 20,
+                              ), // 再次放大錯誤文字
                             ),
                           );
                         }
 
                         final records = snapshot.data ?? [];
                         if (records.isEmpty) {
-                          return Center(child: Text('No records for this day'));
+                          return const Center(
+                            child: Text(
+                              'No records for this day',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.grey,
+                              ), // 再次放大提示文字
+                            ),
+                          );
                         }
 
                         return ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           itemCount: records.length,
                           itemBuilder: (context, index) {
                             final r = records[index];
                             return Card(
-                              margin: EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 8,
+                              elevation: 3,
+                              margin: const EdgeInsets.symmetric(
+                                vertical: 8,
+                                horizontal: 4,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            r.target,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 22, // 再次放大目標名稱
+                                              color: Colors.deepPurple,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        if (r.completed)
+                                          const Icon(
+                                            Icons.check_circle,
+                                            color: Colors.green,
+                                            size: 24, // 再次放大圖示
+                                          )
+                                        else
+                                          const Icon(
+                                            Icons.warning,
+                                            color: Colors.orange,
+                                            size: 24, // 再次放大圖示
+                                          ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            color: Colors.grey,
+                                            size: 28, // 再次放大刪除圖示
+                                          ),
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder:
+                                                  (context) => AlertDialog(
+                                                    title: const Text(
+                                                      'Delete Record',
+                                                      style: TextStyle(
+                                                        fontSize: 20,
+                                                      ),
+                                                    ), // 再次放大標題
+                                                    content: Text(
+                                                      'Are you sure you want to delete the record for "${r.target}" on ${_formatTimestamp(r.timestamp)}?',
+                                                      style: const TextStyle(
+                                                        fontSize: 18,
+                                                      ), // 再次放大內容
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed:
+                                                            () => Navigator.pop(
+                                                              context,
+                                                            ),
+                                                        child: const Text(
+                                                          'Cancel',
+                                                          style: TextStyle(
+                                                            fontSize: 18,
+                                                          ),
+                                                        ), // 再次放大按鈕文字
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                          _deleteRecord(r);
+                                                        },
+                                                        child: const Text(
+                                                          'Delete',
+                                                          style: TextStyle(
+                                                            color: Colors.red,
+                                                            fontSize: 18,
+                                                          ),
+                                                        ), // 再次放大按鈕文字
+                                                      ),
+                                                    ],
+                                                  ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    const Divider(height: 16, thickness: 1),
+                                    Wrap(
+                                      spacing: 16,
+                                      runSpacing: 8,
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.timer,
+                                              size: 20,
+                                              color: Colors.blueGrey,
+                                            ), // 再次放大圖示
+                                            const SizedBox(width: 8), // 增加間距
+                                            Text(
+                                              '${r.duration}',
+                                              style: const TextStyle(
+                                                fontSize: 19,
+                                                color: Colors.black87,
+                                              ), // 再次放大文字
+                                            ),
+                                          ],
+                                        ),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.local_fire_department,
+                                              size: 20,
+                                              color: Colors.red,
+                                            ), // 再次放大圖示
+                                            const SizedBox(width: 8), // 增加間距
+                                            Text(
+                                              '${r.calories} kcal',
+                                              style: const TextStyle(
+                                                fontSize: 19,
+                                                color: Colors.black87,
+                                              ), // 再次放大文字
+                                            ),
+                                          ],
+                                        ),
+                                        if (r.distanceKm != null &&
+                                            r.distanceKm! >= 0)
                                           Row(
+                                            mainAxisSize: MainAxisSize.min,
                                             children: [
+                                              const Icon(
+                                                Icons.directions_run,
+                                                size: 20,
+                                                color: Colors.teal,
+                                              ), // 再次放大圖示
+                                              const SizedBox(width: 8), // 增加間距
                                               Text(
-                                                r.target,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                ),
+                                                '${r.distanceKm!.toStringAsFixed(2)} km',
+                                                style: const TextStyle(
+                                                  fontSize: 19,
+                                                  color: Colors.black87,
+                                                ), // 再次放大文字
                                               ),
-                                              SizedBox(width: 8),
-                                              if (r.completed)
-                                                Icon(
-                                                  Icons.check_circle,
-                                                  color: Colors.green,
-                                                  size: 18,
-                                                )
-                                              else
-                                                Icon(
-                                                  Icons.warning,
-                                                  color: Colors.orange,
-                                                  size: 18,
-                                                ),
                                             ],
                                           ),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            'Duration: ${r.duration} | Calories: ${r.calories}',
-                                          ),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            'Recorded at: ${_formatTimestamp(r.timestamp)}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.delete,
-                                        color: Colors.red,
-                                      ),
-                                      onPressed: () {
-                                        // Confirmation dialog
-                                        showDialog(
-                                          context: context,
-                                          builder:
-                                              (context) => AlertDialog(
-                                                title: Text('Delete Record'),
-                                                content: Text(
-                                                  'Are you sure you want to delete this record?',
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed:
-                                                        () => Navigator.pop(
-                                                          context,
-                                                        ),
-                                                    child: Text('Cancel'),
-                                                  ),
-                                                  TextButton(
-                                                    onPressed: () {
-                                                      Navigator.pop(context);
-                                                      _deleteRecord(r);
-                                                    },
-                                                    child: Text('Delete'),
-                                                  ),
-                                                ],
+                                        if (r.steps != null && r.steps! >= 0)
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.directions_walk,
+                                                size: 20,
+                                                color: Colors.purple,
+                                              ), // 再次放大圖示
+                                              const SizedBox(width: 8), // 增加間距
+                                              Text(
+                                                '${r.steps} steps',
+                                                style: const TextStyle(
+                                                  fontSize: 19,
+                                                  color: Colors.black87,
+                                                ), // 再次放大文字
                                               ),
-                                        );
-                                      },
+                                            ],
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Align(
+                                      alignment: Alignment.bottomRight,
+                                      child: Text(
+                                        'Recorded at: ${_formatTimestamp(r.timestamp)}',
+                                        style: TextStyle(
+                                          fontSize: 15, // 再次放大時間戳
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -331,6 +510,8 @@ class Record {
   final String target;
   final String type;
   final bool completed;
+  final double? distanceKm;
+  final int? steps;
 
   Record({
     required this.id,
@@ -340,18 +521,39 @@ class Record {
     required this.target,
     required this.type,
     required this.completed,
+    this.distanceKm,
+    this.steps,
   });
 
   factory Record.fromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    double? parsedDistance;
+    final distanceValue = data['distance_time_based_km'];
+    if (distanceValue is num) {
+      parsedDistance = distanceValue.toDouble();
+    } else if (distanceValue is String) {
+      parsedDistance = double.tryParse(distanceValue);
+    }
+
+    int? parsedSteps;
+    final stepsValue = data['steps'];
+    if (stepsValue is num) {
+      parsedSteps = stepsValue.toInt();
+    } else if (stepsValue is String) {
+      parsedSteps = int.tryParse(stepsValue);
+    }
+
     return Record(
       id: doc.id,
-      duration: data['duration']?.toString() ?? '', // 使用 ?.toString() 並提供預設值
-      calories: data['calories']?.toString() ?? '', // 使用 ?.toString() 並提供預設值
+      duration: data['duration']?.toString() ?? '',
+      calories: data['calories']?.toString() ?? '',
       timestamp: data['timestamp'] as int,
       target: data['target'] as String,
       type: data['type'] as String,
       completed: data['completed'] as bool,
+      distanceKm: parsedDistance,
+      steps: parsedSteps,
     );
   }
 }
