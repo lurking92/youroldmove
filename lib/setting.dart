@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:myapp/theme_provider.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -25,9 +27,9 @@ class SettingsPage extends StatelessWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final uid = user.uid;
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      // Use a transparent appBar over a gradient
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -43,12 +45,12 @@ class SettingsPage extends StatelessWidget {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
+
           final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
           final userName = data['name'] as String? ?? 'No Name';
           final email = data['email'] as String? ?? user.email ?? '';
           final prefs = data['preferences'] as Map<String, dynamic>? ?? {};
           final notificationsEnabled = prefs['notifications'] as bool? ?? true;
-          final darkModeEnabled = prefs['darkMode'] as bool? ?? false;
 
           return Stack(
             children: [
@@ -63,11 +65,10 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(top: 120), // shift content below header
+                padding: const EdgeInsets.only(top: 120),
                 child: ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
-                    // Profile Card
                     Card(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       elevation: 4,
@@ -99,7 +100,6 @@ class SettingsPage extends StatelessWidget {
                       ),
                     ),
 
-                    // Account Section
                     const SizedBox(height: 16),
                     _SectionCard(
                       title: 'Account',
@@ -117,7 +117,6 @@ class SettingsPage extends StatelessWidget {
                       ],
                     ),
 
-                    // Preferences Section
                     const SizedBox(height: 16),
                     _SectionCard(
                       title: 'Preferences',
@@ -129,15 +128,17 @@ class SettingsPage extends StatelessWidget {
                           secondary: const Icon(Icons.notifications),
                         ),
                         SwitchListTile(
-                          value: darkModeEnabled,
-                          onChanged: (val) => _updatePreference(uid, 'darkMode', val),
+                          value: themeProvider.isDarkMode,
+                          onChanged: (val) {
+                            themeProvider.toggleTheme(val);
+                            _updatePreference(uid, 'darkMode', val);
+                          },
                           title: const Text('Dark Mode'),
                           secondary: const Icon(Icons.dark_mode),
                         ),
                       ],
                     ),
 
-                    // Others Section
                     const SizedBox(height: 16),
                     _SectionCard(
                       title: 'Others',
