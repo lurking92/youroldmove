@@ -503,128 +503,130 @@ class _HomePageState extends State<HomePage> {
 
                       const SizedBox(height: 12),
 
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final double spacing = 8.0 * 2;
-                          final double cardWidth =
-                              (constraints.maxWidth - spacing) / 3;
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal, // 設置為水平滾動
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            const double fixedCardWidth = 120.0; // 調整這個值來控制卡片大小
+                            const double spacing = 8.0;
 
-                          // If no data or user not logged in, display static data
-                          if (_recentRuns.isEmpty) {
-                            return Row(
-                              children: [
+                            // If no data or user not logged in, display static data
+                            if (_recentRuns.isEmpty) {
+                              return Row(
+                                children: [
+                                  SizedBox(
+                                    width: fixedCardWidth,
+                                    child: const _RunCard(
+                                      date: '?',
+                                      duration: '?',
+                                      difficulty: '?', // 預設為 '?'
+                                      kcal: 0.0,
+                                      distance: 0,
+                                      steps: 0,
+                                    ),
+                                  ),
+                                  const SizedBox(width: spacing),
+                                  SizedBox(
+                                    width: fixedCardWidth,
+                                    child: const _RunCard(
+                                      date: '?',
+                                      duration: '?',
+                                      difficulty: '?', // 預設為 '?'
+                                      kcal: 0,
+                                      distance: 0,
+                                      steps: 0,
+                                    ),
+                                  ),
+                                  const SizedBox(width: spacing),
+                                  SizedBox(
+                                    width: fixedCardWidth,
+                                    child: const _RunCard(
+                                      date: '?',
+                                      duration: '?',
+                                      difficulty: '?', // 預設為 '?'
+                                      kcal: 0,
+                                      distance: 0,
+                                      steps: 0,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+
+                            final displayRuns = _recentRuns.take(3).toList();
+                            final List<Widget> runCards = [];
+
+                            for (int i = 0; i < displayRuns.length; i++) {
+                              final run = displayRuns[i];
+                              if (i > 0) {
+                                runCards.add(const SizedBox(width: spacing));
+                              }
+                              runCards.add(
                                 SizedBox(
-                                  width: cardWidth,
+                                  width: fixedCardWidth, // 使用固定寬度
+                                  child: _RunCard(
+                                    date: run['date'],
+                                    duration: run['duration'],
+                                    difficulty:
+                                        run['difficulty'], // 直接使用從 Firebase 讀取到的難度
+                                    kcal: run['kcal'].toDouble(),
+                                    distance: run['distance'] as double?,
+                                    steps: run['steps'] as int?,
+                                  ),
+                                ),
+                              );
+                            }
+
+                            // If fewer than 3 records, fill with static data (同時更新難度)
+                            // 根據您的需求，將這些靜態數據的 difficulty 也設為 '?'，讓使用者知道這是空數據
+                            if (displayRuns.length == 1) {
+                              runCards.add(const SizedBox(width: spacing));
+                              runCards.add(
+                                SizedBox(
+                                  width: fixedCardWidth,
                                   child: const _RunCard(
                                     date: '?',
                                     duration: '?',
-                                    difficulty: '?', // 預設為 '?'
+                                    difficulty: '?',
                                     kcal: 0.0,
                                     distance: 0,
                                     steps: 0,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                              );
+                              runCards.add(const SizedBox(width: spacing));
+                              runCards.add(
                                 SizedBox(
-                                  width: cardWidth,
+                                  width: fixedCardWidth,
                                   child: const _RunCard(
                                     date: '?',
                                     duration: '?',
-                                    difficulty: '?', // 預設為 '?'
-                                    kcal: 0,
+                                    difficulty: '?',
+                                    kcal: 0.0,
                                     distance: 0,
                                     steps: 0,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                              );
+                            } else if (displayRuns.length == 2) {
+                              runCards.add(const SizedBox(width: spacing));
+                              runCards.add(
                                 SizedBox(
-                                  width: cardWidth,
+                                  width: fixedCardWidth,
                                   child: const _RunCard(
                                     date: '?',
                                     duration: '?',
-                                    difficulty: '?', // 預設為 '?'
-                                    kcal: 0,
+                                    difficulty: '?',
+                                    kcal: 0.0,
                                     distance: 0,
                                     steps: 0,
                                   ),
                                 ),
-                              ],
-                            );
-                          }
-
-                          final displayRuns = _recentRuns.take(3).toList();
-                          final List<Widget> runCards = [];
-
-                          for (int i = 0; i < displayRuns.length; i++) {
-                            final run = displayRuns[i];
-                            if (i > 0) {
-                              runCards.add(const SizedBox(width: 8));
+                              );
                             }
-                            runCards.add(
-                              SizedBox(
-                                width: cardWidth,
-                                child: _RunCard(
-                                  date: run['date'],
-                                  duration: run['duration'],
-                                  difficulty:
-                                      run['difficulty'], // 直接使用從 Firebase 讀取到的難度
-                                  kcal: run['kcal'].toDouble(),
-                                  distance: run['distance'] as double?,
-                                  steps: run['steps'] as int?,
-                                ),
-                              ),
-                            );
-                          }
-
-                          // If fewer than 3 records, fill with static data (同時更新難度)
-                          // 根據您的需求，將這些靜態數據的 difficulty 也設為 '?'，讓使用者知道這是空數據
-                          if (displayRuns.length == 1) {
-                            runCards.add(const SizedBox(width: 8));
-                            runCards.add(
-                              SizedBox(
-                                width: cardWidth,
-                                child: const _RunCard(
-                                  date: '?',
-                                  duration: '?',
-                                  difficulty: '?',
-                                  kcal: 0.0,
-                                  distance: 0,
-                                  steps: 0,
-                                ),
-                              ),
-                            );
-                            runCards.add(const SizedBox(width: 8));
-                            runCards.add(
-                              SizedBox(
-                                width: cardWidth,
-                                child: const _RunCard(
-                                  date: '?',
-                                  duration: '?',
-                                  difficulty: '?',
-                                  kcal: 0.0,
-                                  distance: 0,
-                                  steps: 0,
-                                ),
-                              ),
-                            );
-                          } else if (displayRuns.length == 2) {
-                            runCards.add(const SizedBox(width: 8));
-                            runCards.add(
-                              SizedBox(
-                                width: cardWidth,
-                                child: const _RunCard(
-                                  date: '?',
-                                  duration: '?',
-                                  difficulty: '?',
-                                  kcal: 0.0,
-                                  distance: 0,
-                                  steps: 0,
-                                ),
-                              ),
-                            );
-                          }
-                          return Row(children: runCards);
-                        },
+                            return Row(children: runCards);
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -749,7 +751,7 @@ class _RunCard extends StatelessWidget {
         iconColor = Colors.green;
         break;
       case 'medium':
-        iconColor = Colors.lightBlue;
+        iconColor = Colors.lightBlue; // Medium 改為藍色
         break;
       case 'hard':
         iconColor = Colors.orange; // Hard 改為橘色
@@ -800,9 +802,13 @@ class _RunCard extends StatelessWidget {
                 color: Colors.redAccent,
               ),
               const SizedBox(width: 4),
+              // 將 kcal 字體增加 1 (12 -> 13)
               Text(
-                kcalText, // 使用處理過後的 kcalText
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                kcalText,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13, // 從 12 增加 1 到 13
+                ),
               ),
             ],
           ),
@@ -813,11 +819,20 @@ class _RunCard extends StatelessWidget {
               children: [
                 const Icon(Icons.map, size: 20, color: Colors.blue),
                 const SizedBox(width: 4),
-                Text(
-                  (distance == 0.0)
-                      ? '0.0 km'
-                      : '${distance!.toStringAsFixed(2)} km', // 如果為0則顯示?
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                // 將 distance 字體增加 1 (12 -> 13) 並顯示兩位小數
+                Expanded(
+                  // 使用Expanded來確保文字不會溢出
+                  child: Text(
+                    (distance == 0.0)
+                        ? '0.00 km' // 0 時也顯示兩位
+                        : '${distance!.toStringAsFixed(2)} km', // 顯示兩位小數
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13, // 從 12 增加 1 到 13
+                    ),
+                    overflow: TextOverflow.ellipsis, // 文字過長時顯示省略號
+                    softWrap: false, // 阻止換行
+                  ),
                 ),
               ],
             ),
@@ -829,14 +844,23 @@ class _RunCard extends StatelessWidget {
               children: [
                 const Icon(Icons.alt_route, size: 20, color: Colors.purple),
                 const SizedBox(width: 4),
-                Text(
-                  (steps == 0) ? '0' : '${steps} steps', // 如果為0則顯示?
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                // 將 steps 字體增加 1 (12 -> 13)
+                Expanded(
+                  // 使用Expanded來確保文字不會溢出
+                  child: Text(
+                    (steps == 0) ? '0 steps' : '${steps} steps',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13, // 從 12 增加 1 到 13
+                    ),
+                    overflow: TextOverflow.ellipsis, // 文字過長時顯示省略號
+                    softWrap: false, // 阻止換行
+                  ),
                 ),
               ],
             ),
           ],
-          const SizedBox(height: 8),
+          const SizedBox(height: 8), // 增加一些間距
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -848,7 +872,7 @@ class _RunCard extends StatelessWidget {
               // 否則顯示大寫的難度，如果 'failed' 顯示 'FAILED'
               (difficulty == '?') ? 'UNKNOWN' : difficulty.toUpperCase(),
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 14, // 保持此處字體大小不變
                 color: iconColor,
                 fontWeight: FontWeight.bold,
               ),
