@@ -256,9 +256,9 @@ class _HomePageState extends State<HomePage> {
               allRecentRunsLoaded = true;
               if (allTodayStatsLoaded) _isLoading = false;
             });
-            },
+          },
         );
-    }
+  }
 
   // 此函數作為備用，如果從 Firebase 獲取不到明確的難度欄位，則根據 duration 計算
   String _getDifficultyFromDuration(String durationStr) {
@@ -343,7 +343,9 @@ class _HomePageState extends State<HomePage> {
                                       // 更改這裡的 TextStyle，使用 onSurfaceColor
                                       Text(
                                         _currentDate,
-                                        style: TextStyle(color: onSurfaceColor), // 支援 Dark Mode
+                                        style: TextStyle(
+                                          color: onSurfaceColor,
+                                        ), // 支援 Dark Mode
                                       ),
                                     ],
                                   ),
@@ -755,7 +757,7 @@ class _RunCard extends StatelessWidget {
         iconColor = Colors.green;
         break;
       case 'medium':
-        iconColor = Colors.lightblue; // Medium 改為藍色
+        iconColor = Colors.lightBlue; // Medium 改為藍色
         break;
       case 'hard':
         iconColor = Colors.orange; // Hard 改為橘色
@@ -792,7 +794,8 @@ class _RunCard extends StatelessWidget {
           // 更改這裡的 TextStyle，使用 Theme.of(context).colorScheme.onSurface
           Text(
             'Time : $duration',
-            style: TextStyle( // 移除 const，因為顏色會變
+            style: TextStyle(
+              // 移除 const，因為顏色會變
               fontSize: 16,
               color: Theme.of(context).colorScheme.onSurface, // 支援 Dark Mode
               fontWeight: FontWeight.bold,
