@@ -35,24 +35,24 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final newPassword = _newPasswordController.text;
 
     try {
-      // 重新驗證身份
+      // Re-authenticate
       final credential = EmailAuthProvider.credential(email: email, password: currentPassword);
       await user.reauthenticateWithCredential(credential);
 
-      // 更新密碼
+      // Update password
       await user.updatePassword(newPassword);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('密碼已成功更新')),
+        const SnackBar(content: Text('Password updated successfully')),
       );
 
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
-      String message = '更新失敗';
+      String message = 'Password update failed';
       if (e.code == 'wrong-password') {
-        message = '當前密碼錯誤';
+        message = 'Incorrect current password';
       } else if (e.code == 'requires-recent-login') {
-        message = '請重新登入後再試一次';
+        message = 'Please re-login and try again';
       }
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } finally {
@@ -63,7 +63,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('更改密碼')),
+      appBar: AppBar(title: const Text('Change Password')),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -72,33 +72,33 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             children: [
               TextFormField(
                 controller: _currentPasswordController,
-                decoration: _inputDecoration('當前密碼'),
+                decoration: _inputDecoration('Current Password'),
                 obscureText: true,
                 validator: (value) =>
-                value != null && value.isNotEmpty ? null : '請輸入當前密碼',
+                value != null && value.isNotEmpty ? null : 'Please enter current password',
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _newPasswordController,
-                decoration: _inputDecoration('新密碼'),
+                decoration: _inputDecoration('New Password'),
                 obscureText: true,
                 validator: (value) =>
-                value != null && value.length >= 6 ? null : '密碼至少需6個字元',
+                value != null && value.length >= 6 ? null : 'Password must be at least 6 characters',
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _confirmController,
-                decoration: _inputDecoration('確認新密碼'),
+                decoration: _inputDecoration('Confirm New Password'),
                 obscureText: true,
                 validator: (value) =>
-                value == _newPasswordController.text ? null : '密碼不一致',
+                value == _newPasswordController.text ? null : 'Passwords do not match',
               ),
               const SizedBox(height: 32),
               _isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
                 onPressed: _changePassword,
-                child: const Text('更新密碼'),
+                child: const Text('Update Password'),
               ),
             ],
           ),
