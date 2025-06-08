@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:myapp/setname.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:myapp/FirstCollectData.dart';
 import 'package:myapp/welcomepage.dart';
@@ -80,6 +81,7 @@ class SportApp extends StatelessWidget {
         '/login': (context) => const Login(),
         '/signup': (context) => const Signup(),
         '/forgot': (context) => const ForgotPassword(),
+        '/setname': (context) => const SetNamePage(),
         '/welcome': (context) => const WelcomePage(userName: 'User'),
         '/collect': (context) => const FirstCollectDataPage(),
         '/home': (context) => const HomePage(),
