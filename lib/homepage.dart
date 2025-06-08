@@ -256,9 +256,9 @@ class _HomePageState extends State<HomePage> {
               allRecentRunsLoaded = true;
               if (allTodayStatsLoaded) _isLoading = false;
             });
-          },
+            },
         );
-  }
+    }
 
   // 此函數作為備用，如果從 Firebase 獲取不到明確的難度欄位，則根據 duration 計算
   String _getDifficultyFromDuration(String durationStr) {
@@ -285,6 +285,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // 獲取當前主題的 onSurface 顏色，這會在 Light/Dark Mode 自動切換
+    final Color onSurfaceColor = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -337,9 +340,10 @@ class _HomePageState extends State<HomePage> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
+                                      // 更改這裡的 TextStyle，使用 onSurfaceColor
                                       Text(
                                         _currentDate,
-                                        style: TextStyle(color: Colors.black),
+                                        style: TextStyle(color: onSurfaceColor), // 支援 Dark Mode
                                       ),
                                     ],
                                   ),
@@ -751,7 +755,7 @@ class _RunCard extends StatelessWidget {
         iconColor = Colors.green;
         break;
       case 'medium':
-        iconColor = Colors.lightBlue; // Medium 改為藍色
+        iconColor = Colors.yellow; // Medium 改為黃色
         break;
       case 'hard':
         iconColor = Colors.orange; // Hard 改為橘色
@@ -785,11 +789,12 @@ class _RunCard extends StatelessWidget {
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
+          // 更改這裡的 TextStyle，使用 Theme.of(context).colorScheme.onSurface
           Text(
             'Time : $duration',
-            style: const TextStyle(
+            style: TextStyle( // 移除 const，因為顏色會變
               fontSize: 16,
-              color: Colors.black,
+              color: Theme.of(context).colorScheme.onSurface, // 支援 Dark Mode
               fontWeight: FontWeight.bold,
             ),
           ),
