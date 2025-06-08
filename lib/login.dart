@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -38,7 +39,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  void _login() async {
+  Future<void> _login() async {
     setState(() => _isLoading = true);
     try {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -46,20 +47,34 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         password: _passwordController.text.trim(),
       );
       Navigator.pushReplacementNamed(context, '/home');
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException {
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Login Failed'),
+        builder: (_) => const AlertDialog(
+          title: Text('Login Failed'),
           content: Text('Email or password incorrect'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
         ),
       );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _googleLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      await GoogleSignIn().signOut();
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      Navigator.pushReplacementNamed(context, '/home');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -88,11 +103,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                   const Text(
                     'Welcome Back 👋',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -104,7 +115,6 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.black),
                     decoration: InputDecoration(
                       labelText: 'Email',
                       prefixIcon: const Icon(Icons.email_outlined),
@@ -120,17 +130,12 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    style: const TextStyle(color: Colors.black),
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                       filled: true,
                       fillColor: Colors.white,
@@ -145,40 +150,51 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/forgot'),
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(fontSize: 14, color: Colors.black54),
-                      ),
+                      child: const Text('Forgot Password?', style: TextStyle(color: Colors.black54)),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                    onPressed: _login,
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange.shade700,
-                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
+                    child: const Text('Login', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                   const SizedBox(height: 20),
+                  const Center(child: Text('or login with', style: TextStyle(fontSize: 14, color: Colors.black54))),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: InkWell(
+                      onTap: _isLoading ? null : _googleLogin,
+                      borderRadius: BorderRadius.circular(40),
+                      child: AnimatedScale(
+                        scale: _isLoading ? 0.95 : 1.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Ink(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(14),
+                          child: Image.asset('assets/images/google_logo.png'),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   TextButton(
                     onPressed: () => Navigator.pushNamed(context, '/signup'),
                     child: const Text(
                       'New to YourOldMove? Create an account',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.deepPurple,
-                        decoration: TextDecoration.underline,
-                      ),
+                      style: TextStyle(fontSize: 15, color: Colors.deepPurple, decoration: TextDecoration.underline),
                     ),
                   ),
                 ],
