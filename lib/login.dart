@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -73,8 +74,15 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         idToken: googleAuth.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      Navigator.pushReplacementNamed(context, '/home');
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final uid = userCredential.user?.uid;
+
+      final doc = await FirebaseFirestore.instance.collection('healthData').doc(uid).get();
+      if (doc.exists) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else{
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
     } finally {
       setState(() => _isLoading = false);
     }
