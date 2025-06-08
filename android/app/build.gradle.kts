@@ -43,3 +43,7 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+}
