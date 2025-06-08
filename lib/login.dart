@@ -77,14 +77,18 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
       final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
       final uid = userCredential.user?.uid;
 
-      final doc = await FirebaseFirestore.instance.collection('healthData').doc(uid).get();
-      if (doc.exists) {
-        Navigator.pushReplacementNamed(context, '/home');
-      } else{
-        Navigator.pushReplacementNamed(context, '/welcome');
+      if (uid != null) {
+        final doc = await FirebaseFirestore.instance.collection('healthData')
+            .doc(uid)
+            .get();
+        if (!doc.exists || !(doc.data()?.containsKey('name') ?? false)) {
+          Navigator.pushReplacementNamed(context, '/setname');
+        } else {
+          Navigator.pushReplacementNamed(context, '/welcome');
+        }
       }
     } finally {
-      setState(() => _isLoading = false);
+        setState(() => _isLoading = false);
     }
   }
 
