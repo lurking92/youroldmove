@@ -21,7 +21,7 @@ class _HealthPageState extends State<HealthPage> {
   final _bodyFatController = TextEditingController();
   final _heartRateController = TextEditingController();
 
-  String _mood = '普通';
+  String _mood = 'Normal';
   double? _bmi;
   String? _lastSavedTime;
 
@@ -30,11 +30,11 @@ class _HealthPageState extends State<HealthPage> {
   String _selectedField = 'weight';
 
   final Map<String, String> _fieldNames = {
-    'weight': '體重',
-    'bloodPressure': '血壓',
-    'bloodSugar': '血糖',
-    'bodyFat': '體脂',
-    'heartRate': '心跳',
+    'weight': 'Weight',
+    'bloodPressure': 'Blood Pressure',
+    'bloodSugar': 'Blood Sugar',
+    'bodyFat': 'Body Fat',
+    'heartRate': 'Heart Rate',
   };
 
   @override
@@ -72,7 +72,7 @@ class _HealthPageState extends State<HealthPage> {
           _bloodSugarController.text = data['bloodSugar']?.toString() ?? '';
           _bodyFatController.text = data['bodyFat']?.toString() ?? '';
           _heartRateController.text = data['heartRate']?.toString() ?? '';
-          _mood = data['mood'] ?? '普通';
+          _mood = data['mood'] ?? 'Normal';
           _calculateBMI();
 
           final ts = data['timestamp'];
@@ -129,14 +129,14 @@ class _HealthPageState extends State<HealthPage> {
       await _firestore.collection('healthHistory').doc(user.uid).collection('records').add(data);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('健康資料已儲存')),
+        const SnackBar(content: Text('Health data saved')),
       );
 
       await _fetchLatestData();
       await _fetchHistory();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('儲存失敗：$e')),
+        SnackBar(content: Text('Save failed: $e')),
       );
     }
   }
@@ -161,15 +161,15 @@ class _HealthPageState extends State<HealthPage> {
 
   Widget _buildMoodSelector() {
     final moods = {
-      '開心': Icons.sentiment_very_satisfied,
-      '普通': Icons.sentiment_neutral,
-      '難過': Icons.sentiment_dissatisfied,
+      'Happy': Icons.sentiment_very_satisfied,
+      'Normal': Icons.sentiment_neutral,
+      'Sad': Icons.sentiment_dissatisfied,
     };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('心情', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text('Mood', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         Row(
           children: moods.entries.map((entry) {
             final selected = _mood == entry.key;
@@ -209,8 +209,8 @@ class _HealthPageState extends State<HealthPage> {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        _bmi != null ? '你的 BMI 是：${_bmi!.toStringAsFixed(1)}' : '請輸入體重與身高以計算 BMI',
-        style: const TextStyle(fontSize: 18),
+        _bmi != null ? 'Your BMI is: ${_bmi!.toStringAsFixed(1)}' : 'Please enter weight and height to calculate BMI',
+        style: const TextStyle(fontSize: 18, color: Colors.black),
       ),
     );
   }
@@ -227,7 +227,7 @@ class _HealthPageState extends State<HealthPage> {
     }
 
     if (spots.isEmpty) {
-      return const Center(child: Text('沒有足夠的資料顯示圖表'));
+      return const Center(child: Text('Not enough data to display chart'));
     }
 
     return LineChart(
@@ -270,13 +270,15 @@ class _HealthPageState extends State<HealthPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('健康資料'),
+        title: const Text('Health Data'),
         backgroundColor: Colors.deepOrange,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
+          TextButton(
             onPressed: _saveData,
-            tooltip: '儲存資料',
+            child: const Text(
+              'Save',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
           ),
         ],
       ),
@@ -285,24 +287,23 @@ class _HealthPageState extends State<HealthPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField('體重 (kg)', _weightController, Icons.monitor_weight),
-            _buildTextField('身高 (cm)', _heightController, Icons.height),
-            _buildTextField('血壓 (mmHg)', _bloodPressureController, Icons.favorite),
-            _buildTextField('血糖 (mg/dL)', _bloodSugarController, Icons.opacity),
-            _buildTextField('體脂 (%)', _bodyFatController, Icons.water_drop),
-            _buildTextField('心跳 (bpm)', _heartRateController, Icons.favorite_border),
+            _buildTextField('Weight (kg)', _weightController, Icons.monitor_weight),
+            _buildTextField('Height (cm)', _heightController, Icons.height),
+            _buildTextField('Blood Pressure (mmHg)', _bloodPressureController, Icons.favorite),
+            _buildTextField('Blood Sugar (mg/dL)', _bloodSugarController, Icons.opacity),
+            _buildTextField('Body Fat (%)', _bodyFatController, Icons.water_drop),
+            _buildTextField('Heart Rate (bpm)', _heartRateController, Icons.favorite_border),
             const SizedBox(height: 10),
             _buildMoodSelector(),
             const SizedBox(height: 20),
             _buildBMI(),
             if (_lastSavedTime != null)
-              Text('最後儲存時間：$_lastSavedTime', style: const TextStyle(fontSize: 14, color: Colors.grey)),
+              Text('Last saved: $_lastSavedTime', style: const TextStyle(fontSize: 14, color: Colors.grey)),
             const SizedBox(height: 30),
 
-            // 下拉選單選擇圖表欄位
             Row(
               children: [
-                const Text('選擇圖表：', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text('Select Chart: ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
@@ -320,7 +321,10 @@ class _HealthPageState extends State<HealthPage> {
                       items: _fieldNames.entries
                           .map((e) => DropdownMenuItem(
                         value: e.key,
-                        child: Text(e.value, style: const TextStyle(fontSize: 16)),
+                        child: Text(
+                          e.value,
+                          style: const TextStyle(fontSize: 16, color: Colors.black), // <--- Black color
+                        ),
                       ))
                           .toList(),
                       onChanged: (value) {
