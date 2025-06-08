@@ -34,7 +34,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
   String? _userId;
 
   // 再次調整老年人平均步頻，降低到更符合非常慢的速度
-  double _stepsPerMinute = 30.0; // 從 50 降低到 30 步/分鐘，非常慢的走路速度
+  final _stepsPerMinute = 30.0; // 從 50 降低到 30 步/分鐘，非常慢的走路速度
 
   @override
   void initState() {
@@ -334,12 +334,14 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final kcal = _calculateCalories(_elapsed);
     final distanceKmTimeBased = _calculateDistanceByTime(_elapsed); // 根據時間計算距離
     final totalSteps = _calculateSteps(_elapsed); // 計算步數
 
     return Scaffold(
-      backgroundColor: Colors.orange[50],
+      backgroundColor: isDark ? Colors.black : Colors.orange[50],
       appBar: AppBar(
         title: const Text(
           'Slow Jog Timer',
@@ -350,7 +352,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
             letterSpacing: 0.5,
           ),
         ),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: isDark ? Colors.grey[900] : Colors.redAccent,
         elevation: 2, // 陰影更小
         centerTitle: true,
         toolbarHeight: 60, // 高度更小
@@ -370,10 +372,10 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Colors.orange.shade100, // 調整漸層顏色
-                    Colors.orange.shade300,
-                  ],
+                  colors:
+                      isDark
+                          ? [Colors.grey.shade900, Colors.grey.shade800]
+                          : [Colors.orange.shade100, Colors.orange.shade300],
                 ),
                 borderRadius: BorderRadius.circular(15), // 調整圓角
                 boxShadow: [
@@ -392,11 +394,12 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                 children: [
                   Text(
                     _formatDuration(_elapsed),
-                    style: const TextStyle(
+                    style: TextStyle(
                       // 將顏色改為黑色
                       fontSize: 55, // 字體更小
                       fontWeight: FontWeight.w800, // 字體粗細調整
-                      color: Colors.black, // 修改計時器數字顏色為黑色
+                      color:
+                          isDark ? Colors.white : Colors.black, // 修改計時器數字顏色為黑色
                       letterSpacing: 2,
                       fontFamily: 'monospace',
                     ),
@@ -424,7 +427,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                       style: const TextStyle(
                         fontSize: 20, // 字體更小
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -455,7 +458,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
                         ),
                       ),
@@ -482,7 +485,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
                         ),
                       ),
@@ -498,7 +501,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
               padding: const EdgeInsets.all(20), // 調整 padding
               margin: const EdgeInsets.only(bottom: 20), // 調整底部間距
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDark ? Colors.grey[850] : Colors.orange.shade100,
                 borderRadius: BorderRadius.circular(12), // 調整圓角
                 border: Border.all(
                   color: Colors.orange.shade200,
@@ -506,7 +509,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                 ), // 調整邊框顏色和粗細
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange,
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -529,7 +532,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                         style: TextStyle(
                           fontSize: 19, // 字體加大
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
                     ],
@@ -562,8 +565,8 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                               border: Border.all(
                                 color:
                                     _nextTargetType == NextTargetType.predefined
-                                        ? Colors.orange.shade800!
-                                        : Colors.orange.shade400!,
+                                        ? Colors.orange.shade800
+                                        : Colors.orange.shade400,
                                 width: 1.5,
                               ),
                               boxShadow: [
@@ -589,7 +592,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                                       _nextTargetType ==
                                               NextTargetType.predefined
                                           ? Colors.white
-                                          : Colors.grey.shade800,
+                                          : Colors.black,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -601,7 +604,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                                         _nextTargetType ==
                                                 NextTargetType.predefined
                                             ? Colors.white
-                                            : Colors.grey.shade800,
+                                            : Colors.black,
                                   ),
                                 ),
                               ],
@@ -631,8 +634,8 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                               border: Border.all(
                                 color:
                                     _nextTargetType == NextTargetType.custom
-                                        ? Colors.orange.shade800!
-                                        : Colors.orange.shade400!,
+                                        ? Colors.orange.shade800
+                                        : Colors.orange.shade400,
                                 width: 1.5,
                               ),
                               boxShadow: [
@@ -657,7 +660,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                                   color:
                                       _nextTargetType == NextTargetType.custom
                                           ? Colors.white
-                                          : Colors.grey.shade800,
+                                          : Colors.black,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -668,7 +671,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                                     color:
                                         _nextTargetType == NextTargetType.custom
                                             ? Colors.white
-                                            : Colors.grey.shade800,
+                                            : Colors.black,
                                   ),
                                 ),
                               ],
@@ -689,7 +692,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
+                            color: isDark ? Colors.white : Colors.black,
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -723,13 +726,16 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                   if (_nextTargetType == NextTargetType.custom)
                     Column(
                       children: [
-                        const Text(
+                        Text(
                           // 修改字體顏色為黑色
                           'Custom Time:',
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black, // 修改 Custom Time 字體顏色為黑色
+                            color:
+                                isDark
+                                    ? Colors.white
+                                    : Colors.black, // 修改 Custom Time 字體顏色為黑色
                           ),
                         ),
                         const SizedBox(height: 10),
@@ -758,10 +764,10 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                               ),
                               child: Text(
                                 _formatDuration(_customTarget),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white, // 文字顏色改為白色
+                                  color: Colors.black,
                                   fontFamily: 'monospace',
                                 ),
                               ),
