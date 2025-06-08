@@ -177,8 +177,7 @@ class _RecordPageState extends State<RecordPage> {
           'My Workout Records',
           style: TextStyle(
             fontSize: 24,
-            color:
-                isDarkMode ? Colors.white : Colors.redAccent, // AppBar 標題顏色調整
+            color: Colors.white, // AppBar 標題顏色調整
           ),
         ),
         backgroundColor:
