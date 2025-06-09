@@ -34,7 +34,9 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
   String? _userId;
 
   // 再次調整老年人平均步頻，降低到更符合非常慢的速度
-  final _stepsPerMinute = 30.0; // 從 50 降低到 30 步/分鐘，非常慢的走路速度
+  final _stepsPerMinute = 30.0;
+
+  // 從 50 降低到 30 步/分鐘，非常慢的走路速度
 
   @override
   void initState() {
@@ -213,7 +215,6 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
           'timestamp': now,
           'completed': completed,
         };
-
         await FirebaseFirestore.instance
             .collection('users')
             .doc(_userId)
@@ -257,7 +258,14 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                     },
                     children:
                         PredefinedTarget.values
-                            .map((e) => Text(_predefinedTargetLabel(e)))
+                            .map(
+                              (e) => Text(
+                                _predefinedTargetLabel(e),
+                                style: TextStyle(
+                                  fontSize: 22, // 調整字體大小
+                                ),
+                              ),
+                            )
                             .toList(),
                   ),
                 ),
@@ -335,7 +343,6 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     final kcal = _calculateCalories(_elapsed);
     final distanceKmTimeBased = _calculateDistanceByTime(_elapsed); // 根據時間計算距離
     final totalSteps = _calculateSteps(_elapsed); // 計算步數
@@ -588,11 +595,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                                 Icon(
                                   Icons.schedule,
                                   size: 24,
-                                  color:
-                                      _nextTargetType ==
-                                              NextTargetType.predefined
-                                          ? Colors.white
-                                          : Colors.black,
+                                  color: Colors.black,
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
@@ -600,11 +603,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                                   style: TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
-                                    color:
-                                        _nextTargetType ==
-                                                NextTargetType.predefined
-                                            ? Colors.white
-                                            : Colors.black,
+                                    color: Colors.black, // 正常模式下固定為黑色
                                   ),
                                 ),
                               ],
@@ -654,24 +653,14 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.tune,
-                                  size: 24,
-                                  color:
-                                      _nextTargetType == NextTargetType.custom
-                                          ? Colors.white
-                                          : Colors.black,
-                                ),
+                                Icon(Icons.tune, size: 24, color: Colors.black),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Custom',
                                   style: TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.bold,
-                                    color:
-                                        _nextTargetType == NextTargetType.custom
-                                            ? Colors.white
-                                            : Colors.black,
+                                    color: Colors.black, // 正常模式下固定為黑色
                                   ),
                                 ),
                               ],
@@ -688,7 +677,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                     Column(
                       children: [
                         Text(
-                          'Select Goal:', // Predefined Time 的標題
+                          'Current Difficulty:', // Predefined Time 的標題
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w600,
@@ -696,29 +685,78 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: _showPredefinedPicker,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange.shade400,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 15,
-                              horizontal: 25,
+                        Row(
+                          // 新增 Row 來並排放置 Text 和 Button
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              // 固定 Easy/Medium/Hard 容器大小
+                              width: 190, // 再次增加寬度
+                              height: 60, // 再次增加高度
+                              child: Container(
+                                // 將顯示當前難度的 Text 包裹在 Container 中
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade500, // 與Kcal按鈕背景色一致
+                                  borderRadius: BorderRadius.circular(
+                                    12,
+                                  ), // 與Kcal統一的圓角
+                                  boxShadow: [
+                                    // 添加陰影以匹配 Kcal 樣式
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: FittedBox(
+                                  // 使用 FittedBox 確保文字適應容器
+                                  fit: BoxFit.scaleDown, // 縮小文字以適應，但不會放大
+                                  child: Text(
+                                    _predefinedTargetLabel(_predefinedTarget),
+                                    style: TextStyle(
+                                      fontSize: 22, // 再次調整字體大小
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                12,
-                              ), // 與Kcal統一的圓角
+                            const SizedBox(width: 10), // 調整間距
+                            ElevatedButton(
+                              onPressed: _showPredefinedPicker,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Colors.orange.shade500, // 與Kcal按鈕背景色一致
+                                foregroundColor: Colors.black,
+                                // 直接設定 fixedSize 來控制按鈕的寬高
+                                fixedSize: const Size(
+                                  150,
+                                  60,
+                                ), // 調整寬度為150，高度與SizedBox一致為60
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    12,
+                                  ), // 與Kcal統一的圓角
+                                ),
+                                elevation: 3,
+                              ),
+                              child: const Text(
+                                'Set Difficulty', // 將按鈕文字改為 Set Difficulty
+                                style: TextStyle(
+                                  fontSize: 17.2, // 再次調整字體大小，以適應新的按鈕大小
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black, // 修改文字顏色為黑色
+                                ),
+                              ),
                             ),
-                            elevation: 3,
-                          ),
-                          child: Text(
-                            _predefinedTargetLabel(_predefinedTarget),
-                            style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
@@ -907,7 +945,7 @@ class _StartPageState extends State<StartPage> with WidgetsBindingObserver {
                     MaterialPageRoute(
                       builder: (context) => const RecordPage(),
                     ), // 正確導航到 RecordPage
-                  ); // TODO: Implement navigation to records page
+                  );
                 },
                 child: const Text(
                   'VIEW RECORDS',
