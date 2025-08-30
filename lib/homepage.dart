@@ -12,9 +12,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  // Merged subscription for kcal, distance, and steps
   StreamSubscription<QuerySnapshot>?
-  _todayStatsSubscription; // 合併 kcal, distance, steps 的訂閱
-  StreamSubscription<QuerySnapshot>? _recentRunsSubscription; // 最近跑步紀錄的訂閱
+      _todayStatsSubscription; 
+  // Subscription for recent running records
+  StreamSubscription<QuerySnapshot>? _recentRunsSubscription; 
   final List<Map<String, dynamic>> _recentRuns = [];
   double _totalKcal = 0;
   double _totalDistanceKm = 0;
@@ -28,11 +30,12 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _userId = FirebaseAuth.instance.currentUser?.uid;
     _currentDate = DateFormat('EEEE, dd MMMM').format(DateTime.now());
-    _setupDataListeners(); // 統一設置所有數據監聽器
+    _setupDataListeners(); // A unified method to set up all data listeners
   }
 
   @override
   void dispose() {
+    // Cancel all active subscriptions to prevent memory leaks
     _todayStatsSubscription?.cancel();
     _recentRunsSubscription?.cancel();
     super.dispose();
@@ -56,7 +59,7 @@ class _HomePageState extends State<HomePage> {
     bool allTodayStatsLoaded = false;
     bool allRecentRunsLoaded = false;
 
-    // 監聽今天的總卡路里、距離和步數
+    // Listen for today's total calories, distance, and steps
     _todayStatsSubscription = FirebaseFirestore.instance
         .collection('users')
         .doc(_userId)
@@ -71,7 +74,7 @@ class _HomePageState extends State<HomePage> {
         int currentTotalSteps = 0;
 
         print(
-          '=== Debug: Found ${snapshot.docs.length} documents for today ===',
+            '=== Debug: Found ${snapshot.docs.length} documents for today ===',
         );
 
         for (var doc in snapshot.docs) {
@@ -79,7 +82,7 @@ class _HomePageState extends State<HomePage> {
           print('Document ID: ${doc.id}');
           print('Raw data: $data');
 
-          // 安全解析 Calories
+          // Safely parse Calories
           final caloriesValue = data['calories'];
           if (caloriesValue is String) {
             currentTotalCalories += double.tryParse(caloriesValue) ?? 0.0;
@@ -87,13 +90,13 @@ class _HomePageState extends State<HomePage> {
             currentTotalCalories += caloriesValue.toDouble();
           }
           print(
-            'Calories value: $caloriesValue (type: ${caloriesValue.runtimeType})',
+              'Calories value: $caloriesValue (type: ${caloriesValue.runtimeType})',
           );
 
-          // 安全解析 Distance
+          // Safely parse Distance
           final distanceValue = data['distance_time_based_km'];
           print(
-            'Distance raw value: $distanceValue (type: ${distanceValue.runtimeType})',
+              'Distance raw value: $distanceValue (type: ${distanceValue.runtimeType})',
           );
           if (distanceValue is String) {
             final parsedDistance = double.tryParse(distanceValue) ?? 0.0;
@@ -107,10 +110,10 @@ class _HomePageState extends State<HomePage> {
             print('Distance is null or unknown type, adding 0.0');
           }
 
-          // 安全解析 Steps
+          // Safely parse Steps
           final stepsValue = data['steps'];
           print(
-            'Steps raw value: $stepsValue (type: ${stepsValue.runtimeType})',
+              'Steps raw value: $stepsValue (type: ${stepsValue.runtimeType})',
           );
           if (stepsValue is String) {
             final parsedSteps = int.tryParse(stepsValue) ?? 0;
@@ -147,7 +150,7 @@ class _HomePageState extends State<HomePage> {
       },
     );
 
-    // 監聽最近 3 筆跑步紀錄
+    // Listen for the 3 most recent running records
     _recentRunsSubscription = FirebaseFirestore.instance
         .collection('users')
         .doc(_userId)
@@ -177,21 +180,21 @@ class _HomePageState extends State<HomePage> {
 
           final durationStr = data['duration']?.toString() ?? '00:00:00';
 
-          String difficulty = '?'; // 預設為 '?'，表示未知或待定
+          String difficulty = '?'; // Default to '?' for unknown or pending
 
-          // **核心修正：難度判斷邏輯再次優化，新增 completed 判斷**
+          // Core logic for determining difficulty, now includes a check for 'completed'
           final bool completed =
               data['completed'] ??
-                  false; // 從 Firebase 讀取 completed 狀態，預設為 false
+                  false; // Read the completed status from Firebase, defaults to false
 
           if (!completed) {
-            difficulty = 'failed'; // 如果未完成，直接設定為 'failed'
+            difficulty = 'failed'; // If the run wasn't completed, set difficulty to 'failed'
           } else {
             final typeValue = data['type']?.toString().toLowerCase();
             final targetStr = data['target']?.toString().toLowerCase();
 
             if (typeValue == 'predefined' && targetStr != null) {
-              // 如果是 'predefined' 類型，則根據 'target' 欄位判斷難度
+              // If it's a 'predefined' run, determine difficulty from the 'target' field
               if (targetStr.contains('easy')) {
                 difficulty = 'easy';
               } else if (targetStr.contains('medium')) {
@@ -199,14 +202,14 @@ class _HomePageState extends State<HomePage> {
               } else if (targetStr.contains('hard')) {
                 difficulty = 'hard';
               } else {
-                // 如果 predefined 的 target 中沒有明確的難度關鍵字，則根據 duration 計算
+                // If the predefined target lacks a clear difficulty keyword, calculate based on duration
                 difficulty = _getDifficultyFromDuration(durationStr);
               }
             } else if (typeValue == 'custom') {
-              // 如果是 'custom' 類型，則直接設定為 'custom'
+              // If it's a 'custom' run, set difficulty to 'custom' directly
               difficulty = 'custom';
             } else {
-              // 其他所有情況（如 type 不存在或不為 predefined/custom），都根據 duration 計算
+              // For all other cases (e.g., type is missing), calculate based on duration
               difficulty = _getDifficultyFromDuration(durationStr);
             }
           }
@@ -218,7 +221,7 @@ class _HomePageState extends State<HomePage> {
           } else if (distanceValue is num) {
             distance = distanceValue.toDouble();
           }
-          // 確保 distance 不為 null
+          // Ensure distance is not null
           distance = distance ?? 0.0;
 
           int? steps;
@@ -228,13 +231,13 @@ class _HomePageState extends State<HomePage> {
           } else if (stepsValue is num) {
             steps = stepsValue.toInt();
           }
-          // 確保 steps 不為 null
+          // Ensure steps is not null
           steps = steps ?? 0;
 
           loadedRuns.add({
             'date': formattedDate,
             'duration': durationStr,
-            'difficulty': difficulty, // 將讀取或判斷到的難度傳遞給 loadedRuns
+            'difficulty': difficulty, // Pass the determined difficulty to loadedRuns
             'kcal': calories,
             'timestamp': timestamp,
             'distance': distance,
@@ -260,10 +263,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // 此函數作為備用，如果從 Firebase 獲取不到明確的難度欄位，則根據 duration 計算
+  // This function serves as a fallback: if no explicit difficulty field is retrieved from Firebase, it calculates it based on duration.
   String _getDifficultyFromDuration(String durationStr) {
     final durationParts = durationStr.split(':');
-    if (durationParts.length != 3) return 'easy'; // 確保格式正確，否則預設為 easy
+    if (durationParts.length != 3) return 'easy'; // Ensure the format is correct, otherwise default to 'easy'
 
     final hours = int.tryParse(durationParts[0]) ?? 0;
     final minutes = int.tryParse(durationParts[1]) ?? 0;
@@ -271,40 +274,41 @@ class _HomePageState extends State<HomePage> {
 
     final totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
-    // **重新調整閾值：這些數字是秒數**
-    // 根據您的實際運動時間來定義 Easy, Medium, Hard 的界線。
-    // 考慮到您有 1 分鐘甚至 5 秒的記錄，我們需要更細緻的劃分。
-    // 建議：
-    // Hard: 大於等於 30 分鐘 (1800 秒)
+    // Redefining thresholds: these values are in seconds.
+    // Based on your workout times, you can define the boundaries for Easy, Medium, and Hard.
+    // Hard: Greater than or equal to 30 minutes (1800 seconds)
+				
+											  
     if (totalSeconds >= 1800) return 'hard';
-    // Medium: 大於等於 10 分鐘 (600 秒)
+    // Medium: Greater than or equal to 10 minutes (600 seconds)
     if (totalSeconds >= 600) return 'medium';
-    // Easy: 低於 10 分鐘
+    // Easy: Less than 10 minutes
     return 'easy';
   }
+}
 
-  @override
+@override
   Widget build(BuildContext context) {
-    // 獲取當前主題的 onSurface 顏色，這會在 Light/Dark Mode 自動切換
+    // Get the onSurface color from the current theme, which auto-adjusts for Light/Dark Mode
     final Color onSurfaceColor = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child:
-        _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
           padding: const EdgeInsets.all(26),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               StreamBuilder<DocumentSnapshot>(
                 stream:
-                FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(FirebaseAuth.instance.currentUser?.uid)
-                    .snapshots(),
+                    FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                        .snapshots(),
                 builder: (context, snapshot) {
                   final data =
                       snapshot.data?.data() as Map<String, dynamic>? ??
@@ -312,7 +316,7 @@ class _HomePageState extends State<HomePage> {
                   final name = data['name'] ?? 'User';
                   final photoUrl = data['photoUrl'] ?? '';
 
-                  // Header
+                  // User profile header
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -325,7 +329,7 @@ class _HomePageState extends State<HomePage> {
                                 : const AssetImage(
                               'assets/images/profile.png',
                             )
-                            as ImageProvider,
+                                as ImageProvider,
                             radius: 24,
                           ),
                           const SizedBox(width: 12),
@@ -340,12 +344,12 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              // 更改這裡的 TextStyle，使用 onSurfaceColor
+                              // Display the current date, adjusted for Dark Mode
                               Text(
                                 _currentDate,
                                 style: TextStyle(
                                   color: onSurfaceColor,
-                                ), // 支援 Dark Mode
+                                ),
                               ),
                             ],
                           ),
@@ -362,7 +366,7 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               const SizedBox(height: 24),
-              // Calories - Using calculated total calories
+              // Display total calories
               Center(
                 child: Column(
                   children: [
@@ -383,27 +387,27 @@ class _HomePageState extends State<HomePage> {
               ),
 
               const SizedBox(height: 24),
-              // Stats section - Dynamic data for Distance and Steps
+              // Display dynamic stats for Distance, Steps, and Points
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // 使用 _totalDistanceKm
+											
                   _StatItem(
                     label: 'Distance',
                     value: '${_totalDistanceKm.toStringAsFixed(2)} km',
                   ),
-                  // 使用 _totalSteps
+									   
                   _StatItem(
                     label: 'Steps',
                     value: '${_totalSteps} steps',
                   ),
-                  // Points 保持靜態或根據實際情況調整
-                  const _StatItem(label: 'Points', value: '1 248'),
+																   
+                  _StatItem(label: 'Points', value: '1 248'),
                 ],
               ),
 
               const SizedBox(height: 24),
-              // Current Points & Rank Card
+              // Card displaying current time and rank
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -422,7 +426,7 @@ class _HomePageState extends State<HomePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Left: Current Points
+                    // Left: Current time
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -496,7 +500,7 @@ class _HomePageState extends State<HomePage> {
 
               const SizedBox(height: 24),
 
-              // Recent Runs Section - Using data loaded from Firebase
+              // Section for recent runs
               const Text(
                 'Recent Runs',
 
@@ -510,13 +514,13 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 12),
 
               SingleChildScrollView(
-                scrollDirection: Axis.horizontal, // 設置為水平滾動
+                scrollDirection: Axis.horizontal,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    const double fixedCardWidth = 120.0; // 調整這個值來控制卡片大小
+                    const double fixedCardWidth = 120.0;
                     const double spacing = 8.0;
 
-                    // If no data or user not logged in, display static data
+                    // Display static data if no user data is available
                     if (_recentRuns.isEmpty) {
                       return Row(
                         children: [
@@ -525,7 +529,7 @@ class _HomePageState extends State<HomePage> {
                             child: const _RunCard(
                               date: '?',
                               duration: '?',
-                              difficulty: '?', // 預設為 '?'
+                              difficulty: '?',
                               kcal: 0.0,
                               distance: 0,
                               steps: 0,
@@ -537,7 +541,7 @@ class _HomePageState extends State<HomePage> {
                             child: const _RunCard(
                               date: '?',
                               duration: '?',
-                              difficulty: '?', // 預設為 '?'
+                              difficulty: '?',
                               kcal: 0,
                               distance: 0,
                               steps: 0,
@@ -549,7 +553,7 @@ class _HomePageState extends State<HomePage> {
                             child: const _RunCard(
                               date: '?',
                               duration: '?',
-                              difficulty: '?', // 預設為 '?'
+                              difficulty: '?',
                               kcal: 0,
                               distance: 0,
                               steps: 0,
@@ -559,6 +563,7 @@ class _HomePageState extends State<HomePage> {
                       );
                     }
 
+                    // Dynamically generate run cards from fetched data
                     final displayRuns = _recentRuns.take(3).toList();
                     final List<Widget> runCards = [];
 
@@ -569,12 +574,12 @@ class _HomePageState extends State<HomePage> {
                       }
                       runCards.add(
                         SizedBox(
-                          width: fixedCardWidth, // 使用固定寬度
+                          width: fixedCardWidth,
                           child: _RunCard(
                             date: run['date'],
                             duration: run['duration'],
                             difficulty:
-                            run['difficulty'], // 直接使用從 Firebase 讀取到的難度
+                            run['difficulty'],
                             kcal: run['kcal'].toDouble(),
                             distance: run['distance'] as double?,
                             steps: run['steps'] as int?,
@@ -583,8 +588,8 @@ class _HomePageState extends State<HomePage> {
                       );
                     }
 
-                    // If fewer than 3 records, fill with static data (同時更新難度)
-                    // 根據您的需求，將這些靜態數據的 difficulty 也設為 '?'，讓使用者知道這是空數據
+                    // Fill remaining space with placeholder cards if fewer than 3 runs exist
+																																 
                     if (displayRuns.length == 1) {
                       runCards.add(const SizedBox(width: spacing));
                       runCards.add(
@@ -639,6 +644,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
 
+      // Main navigation bar
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
         selectedItemColor: Colors.redAccent,
@@ -727,20 +733,21 @@ class _RunCard extends StatelessWidget {
     this.steps,
   });
 
+  // Determine the background color based on the run's difficulty
   Color get _bgColor {
     switch (difficulty.toLowerCase()) {
       case 'failed':
-        return Colors.red.withOpacity(0.1); // 未完成為紅色
+        return Colors.red.withOpacity(0.1);
       case 'easy':
         return Colors.green.withOpacity(0.1);
       case 'medium':
-        return Colors.yellow.withOpacity(0.1); // Medium 改為黃色
+        return Colors.yellow.withOpacity(0.1);
       case 'hard':
-        return Colors.orange.withOpacity(0.1); // Hard 改為橘色
+        return Colors.orange.withOpacity(0.1);
       case 'custom':
-        return Colors.purple.withOpacity(0.1); // Custom 為紫色
+        return Colors.purple.withOpacity(0.1);
       case '?':
-        return Colors.grey.withOpacity(0.1); // 未知為灰色
+        return Colors.grey.withOpacity(0.1);
       default:
         return Colors.grey.withOpacity(0.1);
     }
@@ -751,28 +758,28 @@ class _RunCard extends StatelessWidget {
     final Color iconColor;
     switch (difficulty.toLowerCase()) {
       case 'failed':
-        iconColor = Colors.red; // 未完成為紅色
+        iconColor = Colors.red;
         break;
       case 'easy':
         iconColor = Colors.green;
         break;
       case 'medium':
-        iconColor = Colors.lightBlue; // Medium 改為藍色Add commentMore actions
+        iconColor = Colors.lightBlue;
         break;
       case 'hard':
-        iconColor = Colors.orange; // Hard 改為橘色
+        iconColor = Colors.orange;
         break;
       case 'custom':
-        iconColor = Colors.purple; // Custom 為紫色
+        iconColor = Colors.purple;
         break;
       case '?':
-        iconColor = Colors.grey; // 未知為灰色
+        iconColor = Colors.grey;
         break;
       default:
         iconColor = Colors.grey;
     }
 
-    // 處理當 kcal 為 0 時的顯示
+    // Format kcal text, showing '?' if the value is 0.0
     String kcalText = (kcal == 0.0) ? '?' : '${kcal.toStringAsFixed(1)} kcal';
 
     return Container(
@@ -791,13 +798,13 @@ class _RunCard extends StatelessWidget {
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
-          // 更改這裡的 TextStyle，使用 Theme.of(context).colorScheme.onSurface
+          // Adjust TextStyle to use the theme's onSurface color for Dark Mode support
           Text(
             'Time : $duration',
             style: TextStyle(
-              // 移除 const，因為顏色會變
+												  
               fontSize: 16,
-              color: Theme.of(context).colorScheme.onSurface, // 支援 Dark Mode
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -810,65 +817,65 @@ class _RunCard extends StatelessWidget {
                 color: Colors.redAccent,
               ),
               const SizedBox(width: 4),
-              // 將 kcal 字體增加 1 (12 -> 13)
+												   
               Text(
                 kcalText,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 13, // 從 12 增加 1 到 13
+                  fontSize: 13,
                 ),
               ),
             ],
           ),
-          // **修正：距離為 0 時也要顯示**
+          // Display distance if available
           if (distance != null) ...[
             const SizedBox(height: 4),
             Row(
               children: [
                 const Icon(Icons.map, size: 20, color: Colors.blue),
                 const SizedBox(width: 4),
-                // 將 distance 字體增加 1 (12 -> 13) 並顯示兩位小數
+																			   
                 Expanded(
-                  // 使用Expanded來確保文字不會溢出
+															  
                   child: Text(
                     (distance == 0.0)
-                        ? '0.00 km' // 0 時也顯示兩位
-                        : '${distance!.toStringAsFixed(2)} km', // 顯示兩位小數
+                        ? '0.00 km'
+                        : '${distance!.toStringAsFixed(2)} km',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 13, // 從 12 增加 1 到 13
+                      fontSize: 13,
                     ),
-                    overflow: TextOverflow.ellipsis, // 文字過長時顯示省略號
-                    softWrap: false, // 阻止換行
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
                   ),
                 ),
               ],
             ),
           ],
-          // **修正：步數為 0 時也要顯示**
+          // Display steps if available
           if (steps != null) ...[
             const SizedBox(height: 4),
             Row(
               children: [
                 const Icon(Icons.alt_route, size: 20, color: Colors.purple),
                 const SizedBox(width: 4),
-                // 將 steps 字體增加 1 (12 -> 13)
+													  
                 Expanded(
-                  // 使用Expanded來確保文字不會溢出
+															  
                   child: Text(
                     (steps == 0) ? '0 steps' : '${steps} steps',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 13, // 從 12 增加 1 到 13
+                      fontSize: 13,
                     ),
-                    overflow: TextOverflow.ellipsis, // 文字過長時顯示省略號
-                    softWrap: false, // 阻止換行
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
                   ),
                 ),
               ],
             ),
           ],
-          const SizedBox(height: 8), // 增加一些間距
+          const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -876,11 +883,11 @@ class _RunCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              // 如果 difficulty 是 '?' 或 null，則顯示 'UNKNOWN' 或保持 '?'
-              // 否則顯示大寫的難度，如果 'failed' 顯示 'FAILED'
+              // Display 'UNKNOWN' for '?' difficulty, otherwise show uppercase difficulty
+																			  
               (difficulty == '?') ? 'UNKNOWN' : difficulty.toUpperCase(),
               style: TextStyle(
-                fontSize: 14, // 保持此處字體大小不變
+                fontSize: 14,
                 color: iconColor,
                 fontWeight: FontWeight.bold,
               ),
@@ -891,3 +898,4 @@ class _RunCard extends StatelessWidget {
     );
   }
 }
+		
